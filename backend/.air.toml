@@ -1,0 +1,12 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "go build -o ./tmp/server ./cmd/learnix"
+bin = "tmp/server"
+full_bin = "APP_ENV=local ./tmp/server"
+include_ext = ["go", "yaml"]
+exclude_dir = ["vendor", "tmp"]
+
+[log]
+time = true

@@ -1,0 +1,80 @@
+# === Logs ===
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# === Dependency directories ===
+node_modules/
+bower_components/
+
+# === Build output ===
+dist/
+dist-ssr/
+build/
+out/
+.next/
+.nuxt/
+.svelte-kit/
+*.local
+
+# === Runtime data ===
+*.pid
+*.seed
+*.pid.lock
+
+# === Coverage / testing ===
+coverage/
+*.lcov
+.nyc_output/
+.jest/
+.cypress/
+
+# === Environment files ===
+.env
+.env.*
+!.env.example
+
+# === OS files ===
+.DS_Store
+Thumbs.db
+
+# === IDE / Editor ===
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# === Go (backend) ===
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# === Docker ===
+/docker-compose.override.yml
+/.docker/
+*.pid
+
+# === Misc ===
+*.tgz
+*.tar.gz
+*.zip
+*.tmp
+*.bak
+*.swp
+*.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
