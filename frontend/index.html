@@ -1,13 +1,449 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Learnix - Главная</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <!-- Header & Navigation -->
+    <header>
+      <nav class="container">
+        <div class="logo">
+          <span class="logo-text">Learnix</span>
+        </div>
+        <ul class="nav-menu">
+          <li><a href="index.html" class="active">Главная</a></li>
+          <li><a href="courses.html">Курсы</a></li>
+          <li><a href="teachers.html">Преподаватели</a></li>
+          <li><a href="my-courses.html">Мои курсы</a></li>
+        </ul>
+        <div class="nav-actions">
+          <button class="btn btn-outline-white" onclick="showModal('login')">
+            Вход
+          </button>
+          <button class="btn btn-white" onclick="showModal('register')">
+            Регистрация
+          </button>
+        </div>
+        <div class="menu-toggle" onclick="toggleMobileMenu()">☰</div>
+        <div class="mobile-menu" id="mobileMenu">
+          <ul>
+            <li><a href="index.html" class="active">Главная</a></li>
+            <li><a href="courses.html">Курсы</a></li>
+            <li><a href="teachers.html">Преподаватели</a></li>
+            <li><a href="my-courses.html">Мои курсы</a></li>
+          </ul>
+          <div class="mobile-actions">
+            <button
+              class="btn btn-outline-white btn-block"
+              onclick="showModal('login')"
+            >
+              Вход
+            </button>
+            <button
+              class="btn btn-white btn-block"
+              onclick="showModal('register')"
+            >
+              Регистрация
+            </button>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="container hero-content">
+        <div class="hero-text">
+          <span class="hero-badge">🎓 Образовательная платформа</span>
+          <h1 class="hero-title">Добро пожаловать в Learnix</h1>
+          <p class="hero-description">
+            Откройте для себя мир новых знаний и развивайте свои навыки вместе с
+            опытными преподавателями. Более 150 курсов, гибкое расписание и
+            персональная обратная связь.
+          </p>
+          <div class="hero-buttons">
+            <button
+              class="btn btn-primary btn-lg"
+              onclick="showModal('register')"
+            >
+              <span>Начать обучение</span>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path
+                  d="M7.5 15L12.5 10L7.5 5"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+            <a href="courses.html" class="btn btn-secondary btn-lg"
+              >Просмотреть курсы</a
+            >
+          </div>
+          <div class="hero-stats">
+            <div class="stat-item">
+              <strong>5000+</strong>
+              <span>студентов</span>
+            </div>
+            <div class="stat-item">
+              <strong>150+</strong>
+              <span>курсов</span>
+            </div>
+            <div class="stat-item">
+              <strong>85+</strong>
+              <span>преподавателей</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-image">
+          <div class="floating-card card-1">
+            <div class="card-icon">📚</div>
+            <div class="card-text">
+              <strong>Программирование</strong>
+              <span>42 курса</span>
+            </div>
+          </div>
+          <div class="floating-card card-2">
+            <div class="card-icon">🎨</div>
+            <div class="card-text">
+              <strong>Дизайн</strong>
+              <span>28 курсов</span>
+            </div>
+          </div>
+          <div class="floating-card card-3">
+            <div class="card-icon">💼</div>
+            <div class="card-text">
+              <strong>Бизнес</strong>
+              <span>35 курсов</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-badge">Возможности</span>
+          <h2 class="section-title">Всё для успешного обучения</h2>
+          <p class="section-subtitle">
+            Современная платформа с полным набором инструментов для эффективного
+            образования
+          </p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">📚</div>
+            <h3>Разнообразные курсы</h3>
+            <p>
+              Широкий выбор факультативных курсов по программированию, дизайну,
+              маркетингу и другим направлениям
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">👨‍🏫</div>
+            <h3>Опытные преподаватели</h3>
+            <p>
+              Обучение ведут практикующие специалисты с реальным опытом работы в
+              своих областях
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">✅</div>
+            <h3>Оценка прогресса</h3>
+            <p>
+              Получайте детальную обратную связь и конструктивные комментарии от
+              преподавателей
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3>Гибкое расписание</h3>
+            <p>
+              Учитесь в удобном темпе без привязки к строгому графику, совмещая
+              с работой и учебой
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Отслеживание статистики</h3>
+            <p>
+              Следите за своим прогрессом и достижениями через личный кабинет
+              студента
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">🏆</div>
+            <h3>Сертификаты</h3>
+            <p>
+              Подтвердите свои знания сертификатом о прохождении курса от нашей
+              платформы
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Popular Courses Section -->
+    <section class="section section-gray">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-badge">Курсы</span>
+          <h2 class="section-title">Популярные курсы</h2>
+          <p class="section-subtitle">
+            Начните своё обучение с одного из самых востребованных курсов
+          </p>
+        </div>
+
+        <div class="courses-grid">
+          <div class="course-card">
+            <div
+              class="course-image"
+              style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              "
+            >
+              <span class="course-badge">Программирование</span>
+            </div>
+            <div class="course-content">
+              <h3 class="course-title">Веб-разработка с нуля</h3>
+              <p class="course-description">
+                Полный курс по HTML, CSS, JavaScript. Создайте 5 реальных
+                проектов для портфолио
+              </p>
+              <div class="course-meta">
+                <div class="instructor">
+                  <div class="instructor-avatar">И</div>
+                  <span>Иван Петров</span>
+                </div>
+                <div class="course-stats">
+                  <span>👥 324</span>
+                  <span>⭐ 4.8</span>
+                </div>
+              </div>
+              <div class="course-footer">
+                <div class="course-info">
+                  <span class="course-duration">⏱ 12 недель</span>
+                  <span class="course-level level-medium">Средний</span>
+                </div>
+                <button
+                  class="btn btn-primary"
+                  onclick="enrollCourse('Веб-разработка')"
+                >
+                  Записаться
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="course-card">
+            <div
+              class="course-image"
+              style="
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+              "
+            >
+              <span class="course-badge">Дизайн</span>
+            </div>
+            <div class="course-content">
+              <h3 class="course-title">UX/UI дизайн интерфейсов</h3>
+              <p class="course-description">
+                Освойте принципы проектирования удобных интерфейсов в Figma и
+                создайте первое приложение
+              </p>
+              <div class="course-meta">
+                <div class="instructor">
+                  <div class="instructor-avatar">Е</div>
+                  <span>Елена Сиверская</span>
+                </div>
+                <div class="course-stats">
+                  <span>👥 287</span>
+                  <span>⭐ 4.9</span>
+                </div>
+              </div>
+              <div class="course-footer">
+                <div class="course-info">
+                  <span class="course-duration">⏱ 8 недель</span>
+                  <span class="course-level level-beginner">Начинающий</span>
+                </div>
+                <button
+                  class="btn btn-primary"
+                  onclick="enrollCourse('UX/UI дизайн')"
+                >
+                  Записаться
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="course-card">
+            <div
+              class="course-image"
+              style="
+                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+              "
+            >
+              <span class="course-badge">Маркетинг</span>
+            </div>
+            <div class="course-content">
+              <h3 class="course-title">Цифровой маркетинг 2025</h3>
+              <p class="course-description">
+                Современные стратегии продвижения: SMM, контент-маркетинг,
+                таргетированная реклама
+              </p>
+              <div class="course-meta">
+                <div class="instructor">
+                  <div class="instructor-avatar">А</div>
+                  <span>Андрей Волков</span>
+                </div>
+                <div class="course-stats">
+                  <span>👥 412</span>
+                  <span>⭐ 4.7</span>
+                </div>
+              </div>
+              <div class="course-footer">
+                <div class="course-info">
+                  <span class="course-duration">⏱ 10 недель</span>
+                  <span class="course-level level-medium">Средний</span>
+                </div>
+                <button
+                  class="btn btn-primary"
+                  onclick="enrollCourse('Цифровой маркетинг')"
+                >
+                  Записаться
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-cta">
+          <a href="courses.html" class="btn btn-secondary btn-lg"
+            >Посмотреть все курсы</a
+          >
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+      <div class="container">
+        <div class="cta-content">
+          <h2>Готовы начать своё обучение?</h2>
+          <p>
+            Присоединяйтесь к тысячам студентов, которые уже развивают свои
+            навыки в Learnix
+          </p>
+          <button class="btn btn-white btn-lg" onclick="showModal('register')">
+            Зарегистрироваться бесплатно
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section">
+            <div class="footer-logo">
+              <span class="logo-text">Learnix</span>
+            </div>
+            <p>
+              Современная образовательная платформа для развития
+              профессиональных навыков
+            </p>
+          </div>
+          <div class="footer-section">
+            <h4>Платформа</h4>
+            <ul>
+              <li><a href="courses.html">Все курсы</a></li>
+              <li><a href="teachers.html">Преподаватели</a></li>
+              <li><a href="#">О нас</a></li>
+              <li><a href="#">Блог</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>Поддержка</h4>
+            <ul>
+              <li><a href="#">Справка</a></li>
+              <li><a href="#">Контакты</a></li>
+              <li><a href="#">FAQ</a></li>
+              <li><a href="#">Отзывы</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>Юридическое</h4>
+            <ul>
+              <li><a href="#">Условия использования</a></li>
+              <li><a href="#">Политика конфиденциальности</a></li>
+              <li><a href="#">Лицензия</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2025 Learnix. Все права защищены.</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal">
+      <div class="modal-overlay" onclick="closeModal()"></div>
+      <div class="modal-content">
+        <button class="modal-close" onclick="closeModal()">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            <path
+              d="M18 6L6 18M6 6l12 12"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+        <h2 id="modalTitle">Вход в систему</h2>
+        <p class="modal-subtitle">Войдите, чтобы продолжить обучение</p>
+        <form id="authForm">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" placeholder="your@email.com" required />
+          </div>
+          <div class="form-group">
+            <label>Пароль</label>
+            <input type="password" placeholder="Введите пароль" required />
+          </div>
+          <div class="form-group" id="nameField">
+            <label>Полное имя</label>
+            <input type="text" placeholder="Иван Петров" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">
+            Продолжить
+          </button>
+        </form>
+        <div class="modal-footer">
+          <p id="toggleText">
+            Нет аккаунта? <a onclick="toggleModal()">Зарегистрироваться</a>
+          </p>
+        </div>
+      </div>
+    </div>
+    <script src="script.js"></script>
   </body>
 </html>
