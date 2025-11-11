@@ -334,6 +334,7 @@ header nav {
 }
 
 .hero-stats {
+  flex-wrap: wrap;
   display: flex;
   gap: 3rem;
 }
@@ -587,6 +588,7 @@ header nav {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  margin-right: 0.5rem;
 }
 
 .instructor-avatar {
@@ -606,6 +608,7 @@ header nav {
   gap: 1rem;
   font-size: 0.9rem;
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .course-footer {
@@ -623,10 +626,12 @@ header nav {
 .course-duration {
   font-size: 0.9rem;
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .course-level {
   padding: 0.3rem 0.8rem;
+  margin-right: 0.5rem;
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 600;
@@ -1369,10 +1374,37 @@ header nav {
   .menu-toggle {
     display: block;
   }
+
+  .course-footer .btn {
+    display: block;
+    width: auto;
+  }
 }
 
+@media (max-width: 515px) {
+  .course-footer {
+    flex-direction: column;
+  }
 
+  .course-footer .btn {
+    width: 100%;
+  }
 
+  .course-info {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+}
+
+@media (max-width: 460px) {
+  .hero-buttons {
+    flex-direction: column;
+  }
+  .hero-content {
+    gap: 1rem;
+    padding: 2rem 1rem;
+  }
+}
 
 
 .course-overview {

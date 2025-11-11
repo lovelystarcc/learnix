@@ -32,8 +32,6 @@ type Config struct {
 
 	RateLimitRequests      int `env:"RATE_LIMIT_REQUESTS" env-default:"100"`
 	RateLimitWindowSeconds int `env:"RATE_LIMIT_WINDOW_SECONDS" env-default:"60"`
-
-	LogLevel string `env:"LOG_LEVEL" env-default:"info"`
 }
 
 func MustLoadConfig() *Config {
