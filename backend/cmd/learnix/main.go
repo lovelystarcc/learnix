@@ -15,6 +15,11 @@ import (
 	"github.com/lovelystarcc/learnix/internal/course/coursehandler"
 	"github.com/lovelystarcc/learnix/internal/course/storage/courserepository"
 	"github.com/lovelystarcc/learnix/internal/lib/logger"
+	"github.com/lovelystarcc/learnix/internal/middleware"
+	"github.com/lovelystarcc/learnix/internal/teacher/storage/teacherrepository"
+	"github.com/lovelystarcc/learnix/internal/teacher/teacherhandler"
+	"github.com/lovelystarcc/learnix/internal/user/storage/userrepository"
+	"github.com/lovelystarcc/learnix/internal/user/userhandler"
 )
 
 func main() {
@@ -50,8 +55,16 @@ func main() {
 	}
 	defer db.Close()
 
-	repo := courserepository.NewCourseRepository(db)
-	handler := coursehandler.NewHandler(log, repo)
+	authMW := middleware.NewAuthMiddleware(cfg.JWTSecret)
+
+	userrepo := userrepository.NewUserRepository(db)
+	userhandler := userhandler.NewHandler(log, userrepo, []byte(cfg.JWTSecret))
+
+	courserepo := courserepository.NewCourseRepository(db)
+	coursehandler := coursehandler.NewHandler(log, courserepo)
+
+	teacherrepo := teacherrepository.NewTeacherRepository(db)
+	teacherhandler := teacherhandler.NewHandler(log, teacherrepo)
 
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   strings.Split(cfg.CORSAllowedOrigins, ","),
@@ -62,8 +75,20 @@ func main() {
 		MaxAge:           300,
 	}))
 
-	// GET для получения списка курсов
-	router.Get("/courses", handler.GetAll)
+	router.Route("/user", func(r chi.Router) {
+		r.Use(authMW.Auth)
+		r.Get("/me", userhandler.Me)
+	})
+
+	router.Get("/user", userhandler.GetAll)
+	router.Post("/user/register", userhandler.Register)
+	router.Post("/user/login", userhandler.Login)
+
+	router.Get("/course", coursehandler.GetAll)
+	router.Post("/course", coursehandler.Create)
+
+	router.Get("/teacher", teacherhandler.GetAll)
+	router.Post("/teacher", teacherhandler.Create)
 
 	log.Info("starting server", "address", address)
 

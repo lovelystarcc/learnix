@@ -5,11 +5,13 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/render"
 
 	"github.com/lovelystarcc/learnix/internal/api"
 	"github.com/lovelystarcc/learnix/internal/course/dto"
+	"github.com/lovelystarcc/learnix/internal/course/entity"
 	"github.com/lovelystarcc/learnix/internal/course/storage"
 )
 
@@ -25,11 +27,50 @@ func NewHandler(log *slog.Logger, storage storage.CourseRepository) *Handler {
 	}
 }
 
+func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
+	const op = "course.handler.create"
+	log := h.log.With(slog.String("op", op))
+
+	var req dto.CourseRequest
+	if err := render.DecodeJSON(r.Body, &req); err != nil {
+		log.Error("failed to decode request", slog.Any("err", err))
+		render.Render(w, r, api.NewErrResponse(http.StatusBadRequest, fmt.Errorf("invalid request body")))
+		return
+	}
+
+	if err := req.Bind(r); err != nil {
+		log.Error("validation failed", slog.Any("err", err))
+		render.Render(w, r, api.NewErrResponse(http.StatusBadRequest, err))
+		return
+	}
+
+	course := &entity.Course{
+		TeacherID:     req.TeacherID,
+		Title:         req.Title,
+		Description:   req.Description,
+		CourseType:    req.CourseType,
+		DurationWeeks: req.DurationWeeks,
+		CreatedAt:     r.Context().Value("now").(time.Time), // или time.Now()
+		UpdatedAt:     r.Context().Value("now").(time.Time), // или time.Now()
+	}
+
+	created, err := h.storage.Create(r.Context(), course)
+	if err != nil {
+		log.Error("failed to create course", slog.Any("err", err))
+		render.Render(w, r, api.NewErrResponse(http.StatusInternalServerError, err))
+		return
+	}
+
+	render.Status(r, http.StatusCreated)
+	render.Render(w, r, dto.NewCourseResponse(created))
+
+	log.Info("course created", slog.Int("course_id", created.ID))
+}
+
 func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 	const op = "course.handler.getAll"
 	log := h.log.With(slog.String("op", op))
 
-	status := r.URL.Query().Get("status")
 	teacherParam := r.URL.Query().Get("teacher_id")
 
 	var teacherID *int
@@ -37,7 +78,8 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 		tid, err := strconv.Atoi(teacherParam)
 		if err != nil {
 			log.Error("invalid teacher_id", slog.String("teacher_id", teacherParam))
-			render.Render(w, r, api.NewErrResponse(http.StatusBadRequest, fmt.Errorf("invalid teacher_id")))
+			render.Render(w, r, api.NewErrResponse(http.StatusBadRequest,
+				fmt.Errorf("invalid teacher_id")))
 			return
 		}
 		teacherID = &tid
@@ -49,7 +91,7 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
 
-	list, err := h.storage.List(r.Context(), status, teacherID, limit, offset)
+	list, err := h.storage.List(r.Context(), teacherID, limit, offset)
 	if err != nil {
 		log.Error("failed to get courses", slog.Any("err", err))
 		render.Render(w, r, api.NewErrResponse(http.StatusInternalServerError, err))
@@ -61,6 +103,5 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	log.Info("courses retrieved",
 		slog.Int("count", len(list)),
-		slog.String("status", status),
 	)
 }

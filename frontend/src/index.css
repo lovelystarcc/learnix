@@ -1178,7 +1178,7 @@ header nav {
 /* ===== MODAL ===== */
 
 .modal {
-  display: none;
+  display: flex;
   position: fixed;
   top: 0;
   left: 0;
@@ -1263,10 +1263,6 @@ header nav {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
-#nameField {
-  display: none;
-}
-
 .modal-footer {
   text-align: center;
   margin-top: 1.5rem;
@@ -1282,6 +1278,49 @@ header nav {
 .modal-footer a:hover {
   text-decoration: underline;
 }
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 280px;
+  max-width: 90%;
+  padding: 1rem 1.25rem;
+  border-radius: var(--border-radius);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: white;
+  background: var(--primary-dark); /* базовый фон */
+  box-shadow: var(--shadow-lg);
+  z-index: 3000;
+  text-align: center;
+  animation: fadeInOut 3s ease forwards;
+}
+
+.toast-success {
+  background: var(--success);
+}
+
+.toast-error {
+  background: var(--danger);
+}
+
+.toast-warning {
+  background: var(--warning);
+}
+
+.toast-info {
+  background: var(--primary);
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, 20px); }
+  10% { opacity: 1; transform: translate(-50%, 0); }
+  90% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, 20px); }
+}
+
 
 /* ===== ADAPTIVE ===== */
 

@@ -20,41 +20,39 @@ func NewCourseRepository(db *sql.DB) *CourseRepository {
 	return &CourseRepository{db: db}
 }
 
-func (r *CourseRepository) Create(ctx context.Context, course *entity.Course) error {
-	const op = "storage.create"
-
+func (r *CourseRepository) Create(ctx context.Context, course *entity.Course) (*entity.Course, error) {
 	query := `
         INSERT INTO courses (
-            teacher_id, title, description, status,
-            start_date, end_date, deleted_at, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4,
-                  $5, $6, $7, $8, $9)
-        RETURNING id
+            teacher_id, title, description, course_type, duration_weeks,
+            deleted_at, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5,
+                  $6, $7, $8)
+        RETURNING id, created_at, updated_at
     `
 
-	// Получаем сгенерированный ID (serial/bigserial)
 	err := r.db.QueryRowContext(ctx, query,
 		course.TeacherID,
 		course.Title,
 		course.Description,
-		course.Status,
-		course.StartDate,
-		course.EndDate,
+		course.CourseType,
+		course.DurationWeeks,
 		course.DeletedAt,
 		course.CreatedAt,
 		course.UpdatedAt,
-	).Scan(&course.ID)
+	).Scan(&course.ID, &course.CreatedAt, &course.UpdatedAt)
 
-	return err
+	if err != nil {
+		return nil, err
+	}
+
+	return course, nil
 }
 
 func (r *CourseRepository) GetByID(ctx context.Context, id int) (*entity.Course, error) {
-	const op = "storage.getbyid"
-
 	var c entity.Course
 
-	query := `SELECT id, teacher_id, title, description, status,
-                 start_date, end_date, deleted_at, created_at, updated_at
+	query := `SELECT id, teacher_id, title, description, course_type, duration_weeks,
+                     deleted_at, created_at, updated_at
               FROM courses WHERE id = $1`
 
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
@@ -62,9 +60,8 @@ func (r *CourseRepository) GetByID(ctx context.Context, id int) (*entity.Course,
 		&c.TeacherID,
 		&c.Title,
 		&c.Description,
-		&c.Status,
-		&c.StartDate,
-		&c.EndDate,
+		&c.CourseType,
+		&c.DurationWeeks,
 		&c.DeletedAt,
 		&c.CreatedAt,
 		&c.UpdatedAt,
@@ -81,26 +78,17 @@ func (r *CourseRepository) GetByID(ctx context.Context, id int) (*entity.Course,
 
 func (r *CourseRepository) List(
 	ctx context.Context,
-	status string,
 	teacherID *int,
 	limit,
 	offset int) ([]*entity.Course, error) {
 
-	const op = "storage.list"
-
-	query := `SELECT id, teacher_id, title, description, status,
-                     start_date, end_date, deleted_at, created_at, updated_at
+	query := `SELECT id, teacher_id, title, description, course_type, duration_weeks,
+                     deleted_at, created_at, updated_at
               FROM courses
               WHERE deleted_at IS NULL`
 
 	args := []interface{}{}
 	argPos := 1
-
-	if status != "" {
-		query += fmt.Sprintf(" AND status = $%d", argPos)
-		args = append(args, status)
-		argPos++
-	}
 
 	if teacherID != nil {
 		query += fmt.Sprintf(" AND teacher_id = $%d", argPos)
@@ -126,9 +114,8 @@ func (r *CourseRepository) List(
 			&c.TeacherID,
 			&c.Title,
 			&c.Description,
-			&c.Status,
-			&c.StartDate,
-			&c.EndDate,
+			&c.CourseType,
+			&c.DurationWeeks,
 			&c.DeletedAt,
 			&c.CreatedAt,
 			&c.UpdatedAt,
@@ -147,8 +134,6 @@ func (r *CourseRepository) List(
 }
 
 func (r *CourseRepository) SoftDelete(ctx context.Context, id int, deletedAt time.Time) error {
-	const op = "storage.softdelete"
-
 	query := `
         UPDATE courses
         SET deleted_at = $1, updated_at = $2
@@ -171,34 +156,7 @@ func (r *CourseRepository) SoftDelete(ctx context.Context, id int, deletedAt tim
 	return nil
 }
 
-func (r *CourseRepository) UpdateStatus(ctx context.Context, id int, status string) error {
-	const op = "storage.updatestatus"
-
-	query := `
-        UPDATE courses
-        SET status = $1, updated_at = $2
-        WHERE id = $3 AND deleted_at IS NULL
-    `
-
-	res, err := r.db.ExecContext(ctx, query, status, time.Now(), id)
-	if err != nil {
-		return err
-	}
-
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if rowsAffected == 0 {
-		return storage.ErrCourseNotFound
-	}
-
-	return nil
-}
-
 func (r *CourseRepository) Exists(ctx context.Context, id int) (bool, error) {
-	const op = "storage.exists"
-
 	query := `SELECT EXISTS(
         SELECT 1 FROM courses WHERE id = $1 AND deleted_at IS NULL
     )`
@@ -213,27 +171,23 @@ func (r *CourseRepository) Exists(ctx context.Context, id int) (bool, error) {
 }
 
 func (r *CourseRepository) Update(ctx context.Context, course *entity.Course) error {
-	const op = "storage.update"
-
 	query := `
         UPDATE courses
         SET teacher_id = $1,
             title = $2,
             description = $3,
-            status = $4,
-            start_date = $5,
-            end_date = $6,
-            updated_at = $7
-        WHERE id = $8 AND deleted_at IS NULL
+            course_type = $4,
+            duration_weeks = $5,
+            updated_at = $6
+        WHERE id = $7 AND deleted_at IS NULL
     `
 
 	res, err := r.db.ExecContext(ctx, query,
 		course.TeacherID,
 		course.Title,
 		course.Description,
-		course.Status,
-		course.StartDate,
-		course.EndDate,
+		course.CourseType,
+		course.DurationWeeks,
 		time.Now(),
 		course.ID,
 	)
