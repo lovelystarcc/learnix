@@ -14,7 +14,6 @@ const HomePage = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Восстановление пользователя
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -41,7 +40,6 @@ const HomePage = () => {
     }
   }, []);
 
-  // Загрузка курсов
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -79,7 +77,6 @@ const HomePage = () => {
 
       <HeroSection onRegister={() => setModalState({ open: true, mode: "register" })} />
 
-      {/* Возможности */}
       <section className="section">
         <div className="container">
           <div className="section-header">
@@ -102,7 +99,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Курсы */}
       <section className="section section-gray">
         <div className="container">
           <div className="section-header">
@@ -135,7 +131,10 @@ const HomePage = () => {
         </div>
       </section>
 
-      <CTASection onRegister={() => setModalState({ open: true, mode: "register" })} />
+      <CTASection 
+        onRegister={() => setModalState({ open: true, mode: "register" })} 
+        user={user}
+      />
 
       <Footer />
 

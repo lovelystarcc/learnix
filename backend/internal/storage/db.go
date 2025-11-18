@@ -1,21 +1,26 @@
 package storage
 
 import (
-	"database/sql"
 	"fmt"
 
-	_ "github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-func New(dsn string) (*sql.DB, error) {
+func New(dsn string) (*gorm.DB, error) {
 	const op = "storage.postgres.New"
 
-	db, err := sql.Open("postgres", dsn)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err = db.Ping(); err != nil {
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	if err = sqlDB.Ping(); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 

@@ -6,7 +6,7 @@ const AuthModal = ({
   onClose, 
   mode = "login", 
   onToggleMode, 
-  onSuccess // новый проп
+  onSuccess
 }) => {
   const isLoginMode = mode === "login";
   const [toastMessage, setToastMessage] = useState("");
@@ -21,7 +21,19 @@ const AuthModal = ({
     const form = e.target;
     const email = form[0].value;
     const password = form[1].value;
-    const fullName = form[2]?.value;
+    const confirmPassword = form[2]?.value;
+    const fullName = form[3]?.value;
+
+    if (!isLoginMode) {
+      if (password !== confirmPassword) {
+        showToast("Пароли не совпадают");
+        return;
+      }
+      if (password.length < 6) {
+        showToast("Пароль должен содержать минимум 6 символов");
+        return;
+      }
+    }
 
     try {
       let data;
@@ -30,7 +42,20 @@ const AuthModal = ({
         if (data.token) {
           localStorage.setItem("token", data.token);
         }
-        onSuccess?.({ email: data.email, fullName: data.fullName || data.full_name });
+        // Получаем полные данные пользователя после логина
+        const userResponse = await fetch("http://localhost:8080/user/me", {
+          headers: { Authorization: `Bearer ${data.token}` },
+        });
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          onSuccess?.({ 
+            id: userData.id,
+            email: userData.email, 
+            fullName: userData.full_name || userData.fullName || userData.email 
+          });
+        } else {
+          onSuccess?.({ email: data.email, fullName: data.fullName || data.full_name });
+        }
         onClose();
       } else {
         data = await register(email, password, fullName, "student");
@@ -68,10 +93,16 @@ const AuthModal = ({
                 <input type="password" placeholder="Введите пароль" required />
               </div>
               {!isLoginMode && (
-                <div className="form-group">
-                  <label>Полное имя</label>
-                  <input type="text" placeholder="Иван Петров" />
-                </div>
+                <>
+                  <div className="form-group">
+                    <label>Подтверждение пароля</label>
+                    <input type="password" placeholder="Повторите пароль" required />
+                  </div>
+                  <div className="form-group">
+                    <label>Полное имя</label>
+                    <input type="text" placeholder="Иван Петров" />
+                  </div>
+                </>
               )}
               <button type="submit" className="btn btn-primary btn-block">
                 Продолжить

@@ -1,4 +1,8 @@
-const CTASection = ({ onRegister }) => {
+const CTASection = ({ onRegister, user }) => {
+  if (user) {
+    return null;
+  }
+
   return (
     <section className="cta-section">
       <div className="container">

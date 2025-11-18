@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Все курсы - Learnix</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Header & Navigation -->
+    <header>
+      <nav class="container">
+        <div class="logo">
+          <span class="logo-text">Learnix</span>
+        </div>
+        <ul class="nav-menu">
+          <li><a href="index.html">Главная</a></li>
+          <li><a href="courses.html" class="active">Курсы</a></li>
+          <li><a href="teachers.html">Преподаватели</a></li>
+          <li><a href="my-courses.html">Мои курсы</a></li>
+        </ul>
+        <div class="nav-actions">
+          <button class="btn btn-outline-white" onclick="showModal('login')">
+            Вход
+          </button>
+          <button class="btn btn-white" onclick="showModal('register')">
+            Регистрация
+          </button>
+        </div>
+        <div class="menu-toggle" onclick="toggleMobileMenu()">☰</div>
+        <div class="mobile-menu" id="mobileMenu">
+          <ul>
+            <li><a href="index.html" class="active">Главная</a></li>
+            <li><a href="courses.html">Курсы</a></li>
+            <li><a href="teachers.html">Преподаватели</a></li>
+            <li><a href="my-courses.html">Мои курсы</a></li>
+          </ul>
+          <div class="mobile-actions">
+            <button
+              class="btn btn-outline-white btn-block"
+              onclick="showModal('login')"
+            >
+              Вход
+            </button>
+            <button
+              class="btn btn-white btn-block"
+              onclick="showModal('register')"
+            >
+              Регистрация
+            </button>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Page Header -->
+    <section class="page-header">
+      <div class="container">
+        <h1 class="page-title">Каталог курсов</h1>
+        <p class="page-subtitle">
+          Выберите курс и начните свой путь к новым знаниям
+        </p>
+      </div>
+    </section>
+
+    <!-- Filters & Search -->
+    <section class="section">
+      <div class="container">
+        <div class="filters-bar">
+          <div class="search-box">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+            >
+              <circle cx="8.5" cy="8.5" r="5.5" stroke-width="2" />
+              <path d="M12 12l5 5" stroke-width="2" stroke-linecap="round" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Поиск курсов..."
+              id="searchInput"
+              onkeyup="filterCourses()"
+            />
+          </div>
+          <div class="filter-buttons">
+            <button class="filter-btn active" onclick="filterByCategory('all')">
+              Все
+            </button>
+            <button
+              class="filter-btn"
+              onclick="filterByCategory('programming')"
+            >
+              Программирование
+            </button>
+            <button class="filter-btn" onclick="filterByCategory('design')">
+              Дизайн
+            </button>
+            <button class="filter-btn" onclick="filterByCategory('marketing')">
+              Маркетинг
+            </button>
+            <button class="filter-btn" onclick="filterByCategory('business')">
+              Бизнес
+            </button>
+          </div>
+        </div>
+
+        <!-- Courses Grid -->
+        <div class="courses-grid" id="coursesGrid">
+          <!-- Programming Courses -->
+          <div class="course-card" data-category="programming">
+            <div
+              class="course-image"
+              style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              "
+            >
+              <span class="course-badge">Программирование</span>
+            </div>
+            <div class="course-content">
+              <h3 class="course-title">Веб-разработка с нуля</h3>
+              <p class="course-description">
+                Полный курс по HTML, CSS, JavaScript. Создайте 5 реальных
+                проектов для портфолио
+              </p>
+              <div class="course-meta">
+                <div class="instructor">
+                  <div class="instructor-avatar">И</div>
+                  <span>Иван Петров</span>
+                </div>
+                <div class="course-stats">
+                  <span>👥 324</span>
+                  <span>⭐ 4.8</span>
+                </div>
+              </div>
+              <div class="course-footer">
+                <div class="course-info">
+                  <span class="course-duration">⏱ 12 недель</span>
+                  <span class="course-level level-medium">Средний</span>
+                </div>
+                <button
+                  class="btn btn-primary"
+                  onclick="enrollCourse('Веб-разработка')"
+                >
+                  Записаться
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="course-card" data-category="programming">
+            <div
+              class="course-image"
+              style="
+                background: linear-gradient(135deg, #5f72bd 0%, #9921e8 100%);
+              "
+            >
+              <span class="course-badge">Программирование</span>
+            </div>
+            <div class="course-content">
+              <h3 class="course-title">Python для начинающих</h3>
+              <p class="course-description">
+                Изучите основы Python, создайте свои первые программы и
+                автоматизируйте задачи
+              </p>
+              <div class="course-meta">
+                <div class="instructor">
+                  <div class="instructor-avatar">М</div>
+                  <span>Мария Кузнецова</span>
+                </div>
+                <div class="course-stats">
+                  <span>👥 512</span>
+                  <span>⭐ 4.9</span>
+                </div>
+              </div>
+              <div class="course-footer">
+                <div class="course-info">
+                  <span class="course-duration">⏱ 8 недель</span>
+                  <span class="course-level level-beginner">Начинающий</span>
+                </div>
+                <button
+                  class="btn btn-primary"
+                  onclick="enrollCourse('Python для начинающих')"
+                >
+                  Записаться
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="course-card" data-category="programming">
+            <div
+              class="course-image"
+              style="
+                background: linear-gradient(135deg, #13547a 0%, #80d0c7 100%);
+              "
+            >
+              <span class="course-badge">Программирование</span>
+            </div>
+            <div class="course-content">
+              <h3 class="course-title">React и современный фронтенд</h3>
+              <p class="course-description">
+                Создавайте современные веб-приложения с использованием React,
+                Redux и TypeScript
+              </p>
+              <div class="course-meta">
+                <div class="instructor">
+                  <div class="instructor-avatar">Д</div>
+                  <span>Дмитрий Соколов</span>
+                </div>
+                <div class="course-stats">
+                  <span>👥 289</span>
+                  <span>⭐ 4.7</span>
+                </div>
+              </div>
+              <div class="course-footer">
+                <div class="course-info">
+                  <span class="course-duration">⏱ 14 недель</span>
+                  <span class="course-level level-advanced">Продвинутый</span>
+                </div>
+                <button
+                  class="btn btn-primary"
+                  onclick="enrollCourse('React и современный фронтенд')"
+                >
+                  Записаться
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Design Courses -->
+          <div class="course-card" data-category="design">
+            <div
+              class="course-image"
+              style="
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+              "
+            >
+              <span class="course-badge">Дизайн</span>
+            </div>
+            <div class="course-content">
+              <h3 class="course-title">UX/UI дизайн интерфейсов</h3>
+              <p class="course-description">
+                Освойте принципы проектирования удобных интерфейсов в Figma
+              </p>
+              <div class="course-meta">
+                <div class="instructor">
+                  <div class="instructor-avatar">Е</div>
+                  <span>Елена Сиверская</span>
+                </div>
+                <div class="course-stats">
+                  <span>👥 287</span>
+                  <span>⭐ 4.9</span>
+                </div>
+              </div>
+              <div class="course-footer">
+                <div class="course-info">
+                  <span class="course-duration">⏱ 8 недель</span>
+                  <span class="course-level level-beginner">Начинающий</span>
+                </div>
+                <button
+                  class="btn btn-primary"
+                  onclick="enrollCourse('UX/UI дизайн')"
+                >
+                  Записаться
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="course-card" data-category="design">
+            <div
+              class="course-image"
+              style="
+                background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+              "
+            >
+              <span class="course-badge">Дизайн</span>
+            </div>
+            <div class="course-content">
+              <h3 class="course-title">Графический дизайн</h3>
+              <p class="course-description">
+                Adobe Photoshop и Illustrator: от базовых инструментов до
+                профессиональных проектов
+              </p>
+              <div class="course-meta">
+                <div class="instructor">
+                  <div class="instructor-avatar">О</div>
+                  <span>Ольга Васильева</span>
+                </div>
+                <div class="course-stats">
+                  <span>👥 198</span>
+                  <span>⭐ 4.6</span>
+                </div>
+              </div>
+              <div class="course-footer">
+                <div class="course-info">
+                  <span class="course-duration">⏱ 10 недель</span>
+                  <span class="course-level level-beginner">Начинающий</span>
+                </div>
+                <button
+                  class="btn btn-primary"
+                  onclick="enrollCourse('Графический дизайн')"
+                >
+                  Записаться
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Marketing Courses -->
+          <div class="course-card" data-category="marketing">
+            <div
+              class="course-image"
+              style="
+                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+              "
+            >
+              <span class="course-badge">Маркетинг</span>
+            </div>
+            <div class="course-content">
+              <h3 class="course-title">Цифровой маркетинг 2025</h3>
+              <p class="course-description">
+                Современные стратегии продвижения: SMM, контент-маркетинг,
+                таргетированная реклама
+              </p>
+              <div class="course-meta">
+                <div class="instructor">
+                  <div class="instructor-avatar">А</div>
+                  <span>Андрей Волков</span>
+                </div>
+                <div class="course-stats">
+                  <span>👥 412</span>
+                  <span>⭐ 4.7</span>
+                </div>
+              </div>
+              <div class="course-footer">
+                <div class="course-info">
+                  <span class="course-duration">⏱ 10 недель</span>
+                  <span class="course-level level-medium">Средний</span>
+                </div>
+                <button
+                  class="btn btn-primary"
+                  onclick="enrollCourse('Цифровой маркетинг')"
+                >
+                  Записаться
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="course-card" data-category="marketing">
+            <div
+              class="course-image"
+              style="
+                background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+              "
+            >
+              <span class="course-badge">Маркетинг</span>
+            </div>
+            <div class="course-content">
+              <h3 class="course-title">SMM и продвижение</h3>
+              <p class="course-description">
+                Эффективное продвижение в социальных сетях, работа с аудиторией
+                и аналитика
+              </p>
+              <div class="course-meta">
+                <div class="instructor">
+                  <div class="instructor-avatar">К</div>
+                  <span>Ксения Новикова</span>
+                </div>
+                <div class="course-stats">
+                  <span>👥 356</span>
+                  <span>⭐ 4.8</span>
+                </div>
+              </div>
+              <div class="course-footer">
+                <div class="course-info">
+                  <span class="course-duration">⏱ 6 недель</span>
+                  <span class="course-level level-beginner">Начинающий</span>
+                </div>
+                <button
+                  class="btn btn-primary"
+                  onclick="enrollCourse('SMM и продвижение')"
+                >
+                  Записаться
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Business Courses -->
+          <div class="course-card" data-category="business">
+            <div
+              class="course-image"
+              style="
+                background: linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%);
+              "
+            >
+              <span class="course-badge">Бизнес</span>
+            </div>
+            <div class="course-content">
+              <h3 class="course-title">Основы менеджмента</h3>
+              <p class="course-description">
+                Управление проектами, командой и ресурсами для эффективного
+                бизнеса
+              </p>
+              <div class="course-meta">
+                <div class="instructor">
+                  <div class="instructor-avatar">С</div>
+                  <span>Сергей Михайлов</span>
+                </div>
+                <div class="course-stats">
+                  <span>👥 245</span>
+                  <span>⭐ 4.5</span>
+                </div>
+              </div>
+              <div class="course-footer">
+                <div class="course-info">
+                  <span class="course-duration">⏱ 8 недель</span>
+                  <span class="course-level level-medium">Средний</span>
+                </div>
+                <button
+                  class="btn btn-primary"
+                  onclick="enrollCourse('Основы менеджмента')"
+                >
+                  Записаться
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="course-card" data-category="business">
+            <div
+              class="course-image"
+              style="
+                background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+              "
+            >
+              <span class="course-badge">Бизнес</span>
+            </div>
+            <div class="course-content">
+              <h3 class="course-title">Финансовая грамотность</h3>
+              <p class="course-description">
+                Учитесь управлять личными финансами, инвестировать и планировать
+                бюджет
+              </p>
+              <div class="course-meta">
+                <div class="instructor">
+                  <div class="instructor-avatar">Т</div>
+                  <span>Татьяна Смирнова</span>
+                </div>
+                <div class="course-stats">
+                  <span>👥 534</span>
+                  <span>⭐ 4.9</span>
+                </div>
+              </div>
+              <div class="course-footer">
+                <div class="course-info">
+                  <span class="course-duration">⏱ 6 недель</span>
+                  <span class="course-level level-beginner">Начинающий</span>
+                </div>
+                <button
+                  class="btn btn-primary"
+                  onclick="enrollCourse('Финансовая грамотность')"
+                >
+                  Записаться
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="noResults" class="no-results" style="display: none">
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 64 64"
+            fill="none"
+            stroke="currentColor"
+          >
+            <circle cx="28" cy="28" r="18" stroke-width="3" />
+            <path d="M42 42l14 14" stroke-width="3" stroke-linecap="round" />
+          </svg>
+          <h3>Курсы не найдены</h3>
+          <p>Попробуйте изменить параметры поиска или фильтры</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section">
+            <div class="footer-logo">
+              <span class="logo-text">Learnix</span>
+            </div>
+            <p>
+              Современная образовательная платформа для развития
+              профессиональных навыков
+            </p>
+          </div>
+          <div class="footer-section">
+            <h4>Платформа</h4>
+            <ul>
+              <li><a href="courses.html">Все курсы</a></li>
+              <li><a href="teachers.html">Преподаватели</a></li>
+              <li><a href="index.html">О нас</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>Поддержка</h4>
+            <ul>
+              <li><a href="#">Справка</a></li>
+              <li><a href="#">Контакты</a></li>
+              <li><a href="#">FAQ</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>Юридическое</h4>
+            <ul>
+              <li><a href="#">Условия использования</a></li>
+              <li><a href="#">Политика конфиденциальности</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2025 Learnix. Все права защищены.</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal">
+      <div class="modal-overlay" onclick="closeModal()"></div>
+      <div class="modal-content">
+        <button class="modal-close" onclick="closeModal()">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            <path
+              d="M18 6L6 18M6 6l12 12"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+        <h2 id="modalTitle">Вход в систему</h2>
+        <p class="modal-subtitle">Войдите, чтобы записаться на курс</p>
+        <form id="authForm">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" placeholder="your@email.com" required />
+          </div>
+          <div class="form-group">
+            <label>Пароль</label>
+            <input type="password" placeholder="Введите пароль" required />
+          </div>
+          <div class="form-group" id="nameField">
+            <label>Полное имя</label>
+            <input type="text" placeholder="Иван Петров" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">
+            Продолжить
+          </button>
+        </form>
+        <div class="modal-footer">
+          <p id="toggleText">
+            Нет аккаунта? <a onclick="toggleModal()">Зарегистрироваться</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="courses-filter.js"></script>
+  </body>
+</html>

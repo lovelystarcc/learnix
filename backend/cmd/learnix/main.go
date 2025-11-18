@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -16,6 +15,7 @@ import (
 	"github.com/lovelystarcc/learnix/internal/course/storage/courserepository"
 	"github.com/lovelystarcc/learnix/internal/lib/logger"
 	"github.com/lovelystarcc/learnix/internal/middleware"
+	"github.com/lovelystarcc/learnix/internal/storage"
 	"github.com/lovelystarcc/learnix/internal/teacher/storage/teacherrepository"
 	"github.com/lovelystarcc/learnix/internal/teacher/teacherhandler"
 	"github.com/lovelystarcc/learnix/internal/user/storage/userrepository"
@@ -48,12 +48,18 @@ func main() {
 		cfg.DBSSLMode,
 	)
 
-	db, err := sql.Open("postgres", dsn)
+	db, err := storage.New(dsn)
 	if err != nil {
 		log.Error("failed to init storage", slog.Any("err", err))
 		os.Exit(1)
 	}
-	defer db.Close()
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Error("failed to get sql.DB", slog.Any("err", err))
+		os.Exit(1)
+	}
+	defer sqlDB.Close()
 
 	authMW := middleware.NewAuthMiddleware(cfg.JWTSecret)
 
@@ -85,10 +91,14 @@ func main() {
 	router.Post("/user/login", userhandler.Login)
 
 	router.Get("/course", coursehandler.GetAll)
+	router.Get("/courses", coursehandler.GetAll) // Алиас для фронтенда
 	router.Post("/course", coursehandler.Create)
 
 	router.Get("/teacher", teacherhandler.GetAll)
-	router.Post("/teacher", teacherhandler.Create)
+	router.Route("/teacher", func(r chi.Router) {
+		r.Use(authMW.Auth)
+		r.Post("/", teacherhandler.Create)
+	})
 
 	log.Info("starting server", "address", address)
 

@@ -16,9 +16,7 @@ type TeacherRequest struct {
 }
 
 func (t *TeacherRequest) Bind(r *http.Request) error {
-	if t.UserID == 0 {
-		return fmt.Errorf("user_id is required")
-	}
+	// user_id теперь берется из контекста middleware, не проверяем его здесь
 	if t.Specialization == "" {
 		return fmt.Errorf("specialization is required")
 	}

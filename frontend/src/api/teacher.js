@@ -1,0 +1,46 @@
+export async function createTeacher(bio, specialization, technologies) {
+  const token = localStorage.getItem("token");
+  
+  if (!token) {
+    throw new Error("Необходимо войти в систему");
+  }
+
+  const res = await fetch("http://localhost:8080/teacher", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      bio,
+      specialization,
+      technologies,
+    }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    
+    // Обработка различных типов ошибок
+    if (res.status === 401) {
+      throw new Error("Необходимо войти в систему");
+    }
+    
+    if (res.status === 400) {
+      throw new Error(errorData.error || "Неверные данные. Проверьте заполнение формы.");
+    }
+    
+    if (res.status === 409) {
+      throw new Error("Вы уже зарегистрированы как преподаватель");
+    }
+    
+    if (res.status >= 500) {
+      throw new Error("Ошибка сервера. Попробуйте позже.");
+    }
+    
+    throw new Error(errorData.error || "Ошибка при создании заявки");
+  }
+
+  return res.json();
+}
+

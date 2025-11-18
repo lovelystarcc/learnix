@@ -1,6 +1,7 @@
 package teacherhandler
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"github.com/go-chi/render"
 
 	"github.com/lovelystarcc/learnix/internal/api"
+	"github.com/lovelystarcc/learnix/internal/middleware"
 	"github.com/lovelystarcc/learnix/internal/teacher/dto"
 	"github.com/lovelystarcc/learnix/internal/teacher/entity"
 	"github.com/lovelystarcc/learnix/internal/teacher/storage"
@@ -31,12 +33,28 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	const op = "teacher.handler.create"
 	log := h.log.With(slog.String("op", op))
 
+	uidVal := r.Context().Value(middleware.UserIDKey)
+	if uidVal == nil {
+		log.Error("no user id in context")
+		render.Render(w, r, api.NewErrResponse(http.StatusUnauthorized, fmt.Errorf("unauthorized")))
+		return
+	}
+
+	userID, ok := uidVal.(int)
+	if !ok {
+		log.Error("invalid user id type")
+		render.Render(w, r, api.NewErrResponse(http.StatusUnauthorized, fmt.Errorf("unauthorized")))
+		return
+	}
+
 	var req dto.TeacherRequest
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
 		log.Error("failed to decode request", slog.Any("err", err))
 		render.Render(w, r, api.NewErrResponse(http.StatusBadRequest, fmt.Errorf("invalid request body")))
 		return
 	}
+
+	req.UserID = userID
 
 	if err := req.Bind(r); err != nil {
 		log.Error("validation failed", slog.Any("err", err))
@@ -57,6 +75,11 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	created, err := h.storage.Create(r.Context(), teacher)
 	if err != nil {
+		if errors.Is(err, storage.ErrTeacherAlreadyExists) {
+			log.Warn("teacher already exists", slog.Int("user_id", userID))
+			render.Render(w, r, api.NewErrResponse(http.StatusConflict, fmt.Errorf("вы уже зарегистрированы как преподаватель")))
+			return
+		}
 		log.Error("failed to create teacher", slog.Any("err", err))
 		render.Render(w, r, api.NewErrResponse(http.StatusInternalServerError, err))
 		return

@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	ErrTeacherNotFound = errors.New("teacher not found")
+	ErrTeacherNotFound      = errors.New("teacher not found")
+	ErrTeacherAlreadyExists = errors.New("teacher already exists")
 )
 
 type TeacherRepository interface {

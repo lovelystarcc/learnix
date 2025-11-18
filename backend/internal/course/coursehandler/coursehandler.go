@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/go-chi/render"
 
@@ -50,8 +49,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		Description:   req.Description,
 		CourseType:    req.CourseType,
 		DurationWeeks: req.DurationWeeks,
-		CreatedAt:     r.Context().Value("now").(time.Time), // или time.Now()
-		UpdatedAt:     r.Context().Value("now").(time.Time), // или time.Now()
+		// CreatedAt и UpdatedAt автоматически устанавливаются GORM через теги autoCreateTime/autoUpdateTime
 	}
 
 	created, err := h.storage.Create(r.Context(), course)
