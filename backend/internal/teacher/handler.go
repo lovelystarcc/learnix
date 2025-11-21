@@ -1,4 +1,4 @@
-package teacherhandler
+package teacher
 
 import (
 	"errors"
@@ -12,17 +12,14 @@ import (
 
 	"github.com/lovelystarcc/learnix/internal/api"
 	"github.com/lovelystarcc/learnix/internal/middleware"
-	"github.com/lovelystarcc/learnix/internal/teacher/dto"
-	"github.com/lovelystarcc/learnix/internal/teacher/entity"
-	"github.com/lovelystarcc/learnix/internal/teacher/storage"
 )
 
 type Handler struct {
 	log     *slog.Logger
-	storage storage.TeacherRepository
+	storage TeacherRepository
 }
 
-func NewHandler(log *slog.Logger, storage storage.TeacherRepository) *Handler {
+func NewHandler(log *slog.Logger, storage TeacherRepository) *Handler {
 	return &Handler{
 		log:     log,
 		storage: storage,
@@ -33,24 +30,19 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	const op = "teacher.handler.create"
 	log := h.log.With(slog.String("op", op))
 
-	uidVal := r.Context().Value(middleware.UserIDKey)
-	if uidVal == nil {
-		log.Error("no user id in context")
-		render.Render(w, r, api.NewErrResponse(http.StatusUnauthorized, fmt.Errorf("unauthorized")))
+	userID, err := middleware.GetUserID(r.Context())
+	if err != nil {
+		log.Error("failed to get user id", slog.Any("err", err))
+		render.Render(w, r, api.NewErrResponse(http.StatusUnauthorized,
+			fmt.Errorf("failed to get user id: %w", err)))
 		return
 	}
 
-	userID, ok := uidVal.(int)
-	if !ok {
-		log.Error("invalid user id type")
-		render.Render(w, r, api.NewErrResponse(http.StatusUnauthorized, fmt.Errorf("unauthorized")))
-		return
-	}
-
-	var req dto.TeacherRequest
+	var req TeacherRequest
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
 		log.Error("failed to decode request", slog.Any("err", err))
-		render.Render(w, r, api.NewErrResponse(http.StatusBadRequest, fmt.Errorf("invalid request body")))
+		render.Render(w, r, api.NewErrResponse(http.StatusBadRequest,
+			fmt.Errorf("failed to decode request: %w", err)))
 		return
 	}
 
@@ -62,7 +54,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	teacher := &entity.Teacher{
+	teacher := &Teacher{
 		UserID:         req.UserID,
 		Bio:            req.Bio,
 		Specialization: req.Specialization,
@@ -75,9 +67,10 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	created, err := h.storage.Create(r.Context(), teacher)
 	if err != nil {
-		if errors.Is(err, storage.ErrTeacherAlreadyExists) {
+		if errors.Is(err, ErrTeacherAlreadyExists) {
 			log.Warn("teacher already exists", slog.Int("user_id", userID))
-			render.Render(w, r, api.NewErrResponse(http.StatusConflict, fmt.Errorf("вы уже зарегистрированы как преподаватель")))
+			render.Render(w, r, api.NewErrResponse(http.StatusConflict,
+				fmt.Errorf("you are already registered as a teacher")))
 			return
 		}
 		log.Error("failed to create teacher", slog.Any("err", err))
@@ -86,7 +79,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusCreated)
-	render.Render(w, r, dto.NewTeacherResponse(created))
+	render.Render(w, r, NewTeacherResponse(created))
 
 	log.Info("teacher created", slog.Int("user_id", created.UserID))
 }
@@ -109,9 +102,10 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusOK)
-	render.RenderList(w, r, dto.NewTeacherListResponse(list))
+	render.RenderList(w, r, NewTeacherListResponse(list))
 
 	log.Info("teachers retrieved",
 		slog.Int("count", len(list)),
 	)
 }
+

@@ -1,5 +1,5 @@
 CREATE TABLE teachers (
-  user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  user_id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   bio TEXT,
   specialization VARCHAR(255),
   technologies TEXT,
@@ -7,5 +7,6 @@ CREATE TABLE teachers (
   students_count INT DEFAULT 0,
 
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL
 );

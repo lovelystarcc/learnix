@@ -188,7 +188,7 @@ const TeachersPage = () => {
         isOpen={applicationModalOpen}
         onClose={() => setApplicationModalOpen(false)}
         user={user}
-        onSuccess={(teacherData) => {
+        onSuccess={() => {
           // Обновляем список преподавателей после успешного создания
           fetchTeachers();
           setApplicationModalOpen(false);

@@ -1,13 +1,18 @@
-package dto
+package user
 
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/go-chi/render"
-	"github.com/lovelystarcc/learnix/internal/user/entity"
 )
+
+var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+var passwordRegex = regexp.MustCompile(`^[a-zA-Z0-9]{6,}$`)
+var roleRegex = regexp.MustCompile(`^(student|teacher|admin)$`)
+var fullNameRegex = regexp.MustCompile(`^[a-zA-Zа-яА-ЯёЁ\s'-]{2,100}$`)
 
 type UserRequest struct {
 	Email    string `json:"email"`
@@ -17,17 +22,18 @@ type UserRequest struct {
 }
 
 func (u *UserRequest) Bind(r *http.Request) error {
-	if u.Email == "" {
-		return fmt.Errorf("email is required")
+	if !emailRegex.MatchString(u.Email) {
+		return fmt.Errorf("invalid email")
 	}
-	if u.Password == "" {
-		return fmt.Errorf("password is required")
+	if !passwordRegex.MatchString(u.Password) {
+		return fmt.Errorf("password must be at least 6 characters long")
 	}
-	if u.FullName == "" {
+
+	if !fullNameRegex.MatchString(u.FullName) {
 		return fmt.Errorf("full_name is required")
 	}
-	if u.Role == "" {
-		return fmt.Errorf("role is required")
+	if !roleRegex.MatchString(u.Role) {
+		return fmt.Errorf("role must be student, teacher or admin")
 	}
 	return nil
 }
@@ -66,7 +72,7 @@ func (u *UserResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func NewUserResponse(u *entity.User) *UserResponse {
+func NewUserResponse(u *User) *UserResponse {
 	return &UserResponse{
 		ID:        u.ID,
 		Email:     u.Email,
@@ -85,7 +91,7 @@ func NewLoginResponse(email, fullName, token string) *LoginResponse {
 	return &LoginResponse{Email: email, FullName: fullName, Token: token}
 }
 
-func NewUserListResponse(users []*entity.User) []render.Renderer {
+func NewUserListResponse(users []*User) []render.Renderer {
 	list := make([]render.Renderer, len(users))
 	for i, u := range users {
 		list[i] = NewUserResponse(u)

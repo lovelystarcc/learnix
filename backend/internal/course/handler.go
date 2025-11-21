@@ -1,4 +1,4 @@
-package coursehandler
+package course
 
 import (
 	"fmt"
@@ -9,17 +9,14 @@ import (
 	"github.com/go-chi/render"
 
 	"github.com/lovelystarcc/learnix/internal/api"
-	"github.com/lovelystarcc/learnix/internal/course/dto"
-	"github.com/lovelystarcc/learnix/internal/course/entity"
-	"github.com/lovelystarcc/learnix/internal/course/storage"
 )
 
 type Handler struct {
 	log     *slog.Logger
-	storage storage.CourseRepository
+	storage CourseRepository
 }
 
-func NewHandler(log *slog.Logger, storage storage.CourseRepository) *Handler {
+func NewHandler(log *slog.Logger, storage CourseRepository) *Handler {
 	return &Handler{
 		log:     log,
 		storage: storage,
@@ -30,10 +27,11 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	const op = "course.handler.create"
 	log := h.log.With(slog.String("op", op))
 
-	var req dto.CourseRequest
+	var req CourseRequest
 	if err := render.DecodeJSON(r.Body, &req); err != nil {
 		log.Error("failed to decode request", slog.Any("err", err))
-		render.Render(w, r, api.NewErrResponse(http.StatusBadRequest, fmt.Errorf("invalid request body")))
+		render.Render(w, r, api.NewErrResponse(http.StatusBadRequest,
+			fmt.Errorf("failed to decode request: %w", err)))
 		return
 	}
 
@@ -43,13 +41,12 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	course := &entity.Course{
+	course := &Course{
 		TeacherID:     req.TeacherID,
 		Title:         req.Title,
 		Description:   req.Description,
 		CourseType:    req.CourseType,
 		DurationWeeks: req.DurationWeeks,
-		// CreatedAt и UpdatedAt автоматически устанавливаются GORM через теги autoCreateTime/autoUpdateTime
 	}
 
 	created, err := h.storage.Create(r.Context(), course)
@@ -60,7 +57,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusCreated)
-	render.Render(w, r, dto.NewCourseResponse(created))
+	render.Render(w, r, NewCourseResponse(created))
 
 	log.Info("course created", slog.Int("course_id", created.ID))
 }
@@ -97,7 +94,7 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusOK)
-	render.RenderList(w, r, dto.NewCourseListResponse(list))
+	render.RenderList(w, r, NewCourseListResponse(list))
 
 	log.Info("courses retrieved",
 		slog.Int("count", len(list)),

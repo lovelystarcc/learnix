@@ -1,11 +1,11 @@
-package dto
+package teacher
 
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/render"
-	"github.com/lovelystarcc/learnix/internal/teacher/entity"
 )
 
 type TeacherRequest struct {
@@ -16,7 +16,6 @@ type TeacherRequest struct {
 }
 
 func (t *TeacherRequest) Bind(r *http.Request) error {
-	// user_id теперь берется из контекста middleware, не проверяем его здесь
 	if t.Specialization == "" {
 		return fmt.Errorf("specialization is required")
 	}
@@ -38,7 +37,7 @@ func (t *TeacherResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func NewTeacherResponse(t *entity.Teacher) *TeacherResponse {
+func NewTeacherResponse(t *Teacher) *TeacherResponse {
 	return &TeacherResponse{
 		UserID:         t.UserID,
 		Bio:            t.Bio,
@@ -46,12 +45,12 @@ func NewTeacherResponse(t *entity.Teacher) *TeacherResponse {
 		Technologies:   t.Technologies,
 		CoursesCount:   t.CoursesCount,
 		StudentsCount:  t.StudentsCount,
-		CreatedAt:      t.CreatedAt.Format("2006-01-02T15:04:05Z"),
-		UpdatedAt:      t.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		CreatedAt:      t.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:      t.UpdatedAt.Format(time.RFC3339),
 	}
 }
 
-func NewTeacherListResponse(teachers []*entity.Teacher) []render.Renderer {
+func NewTeacherListResponse(teachers []*Teacher) []render.Renderer {
 	list := make([]render.Renderer, len(teachers))
 	for i, t := range teachers {
 		list[i] = NewTeacherResponse(t)

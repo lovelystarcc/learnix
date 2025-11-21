@@ -1,4 +1,4 @@
-package dto
+package course
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/go-chi/render"
-	"github.com/lovelystarcc/learnix/internal/course/entity"
 )
 
 type CourseRequest struct {
@@ -24,8 +23,14 @@ func (c *CourseRequest) Bind(r *http.Request) error {
 	if c.TeacherID == 0 {
 		return fmt.Errorf("teacher_id is required")
 	}
-	if c.CourseType == "" {
-		return fmt.Errorf("course_type is required")
+	validCourseTypes := map[string]bool{
+		"programming": true,
+		"design":      true,
+		"marketing":   true,
+		"business":    true,
+	}
+	if !validCourseTypes[c.CourseType] {
+		return fmt.Errorf("course_type must be one of: programming, design, marketing, business")
 	}
 	if c.DurationWeeks <= 0 {
 		return fmt.Errorf("duration_weeks must be greater than 0")
@@ -48,7 +53,7 @@ func (c *CourseResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func NewCourseResponse(c *entity.Course) *CourseResponse {
+func NewCourseResponse(c *Course) *CourseResponse {
 	return &CourseResponse{
 		ID:            c.ID,
 		TeacherID:     c.TeacherID,
@@ -61,7 +66,7 @@ func NewCourseResponse(c *entity.Course) *CourseResponse {
 	}
 }
 
-func NewCourseListResponse(courses []*entity.Course) []render.Renderer {
+func NewCourseListResponse(courses []*Course) []render.Renderer {
 	list := make([]render.Renderer, len(courses))
 	for i, c := range courses {
 		list[i] = NewCourseResponse(c)

@@ -26,7 +26,7 @@ type Config struct {
 	Timeout    time.Duration `env:"SERVER_TIMEOUT" env-default:"4s"`
 	IdleTime   time.Duration `env:"SERVER_IDLE_TIMEOUT" env-default:"60s"`
 
-	CORSAllowedOrigins string `env:"CORS_ALLOWED_ORIGINS" env-default:"*"`
+	CORSAllowedOrigins string `env:"CORS_ALLOWED_ORIGINS"`
 	CORSAllowedMethods string `env:"CORS_ALLOWED_METHODS" env-default:"GET,POST,PUT,DELETE,PATCH,OPTIONS"`
 	CORSAllowedHeaders string `env:"CORS_ALLOWED_HEADERS" env-default:"Authorization,Content-Type"`
 
