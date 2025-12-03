@@ -3,6 +3,7 @@ import HomePage from "./pages/HomePage";
 import CoursesPage from "./pages/CoursesPage";
 import TeachersPage from "./pages/TeachersPage";
 import MyCoursesPage from "./pages/MyCoursesPage";
+import TeacherCoursesPage from "./pages/TeacherCoursesPage";
 
 function App() {
   const [currentPage, setCurrentPage] = useState("home");
@@ -16,6 +17,8 @@ function App() {
         setCurrentPage("teachers");
       } else if (path === "/my-courses" || path === "/my-courses.html") {
         setCurrentPage("my-courses");
+      } else if (path === "/teacher-courses" || path === "/teacher-courses.html") {
+        setCurrentPage("teacher-courses");
       } else {
         setCurrentPage("home");
       }
@@ -39,6 +42,10 @@ function App() {
           e.preventDefault();
           window.history.pushState({}, "", "/my-courses");
           setCurrentPage("my-courses");
+        } else if (url.pathname === "/teacher-courses" || url.pathname === "/teacher-courses.html") {
+          e.preventDefault();
+          window.history.pushState({}, "", "/teacher-courses");
+          setCurrentPage("teacher-courses");
         } else if (url.pathname === "/" || url.pathname === "/index" || url.pathname === "/index.html") {
           e.preventDefault();
           window.history.pushState({}, "", "/");
@@ -66,6 +73,10 @@ function App() {
 
   if (currentPage === "my-courses") {
     return <MyCoursesPage />;
+  }
+
+  if (currentPage === "teacher-courses") {
+    return <TeacherCoursesPage />;
   }
 
   return <HomePage />;

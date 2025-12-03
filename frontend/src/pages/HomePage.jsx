@@ -6,6 +6,8 @@ import CourseCard from "../components/CourseCard";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 import AuthModal from "../components/AuthModal";
+import { getCategoryLabel } from "../utils/courseUtils";
+import { getGradientForCourse } from "../utils/courseUtils";
 
 const HomePage = () => {
   const [modalState, setModalState] = useState({ open: false, mode: "login" });
@@ -27,7 +29,9 @@ const HomePage = () => {
         .then((data) => {
           setUser({
             email: data.email,
-            fullName: data.full_name || data.fullName || data.email,
+            fullName: data.fullName || data.email,
+            id: data.id,
+            role: data.role,
           });
         })
         .catch((err) => {
@@ -43,7 +47,11 @@ const HomePage = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await fetch("http://localhost:8080/courses");
+        const response = await fetch("http://localhost:8080/course");
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.message || "Ошибка загрузки курсов")
+        }
         const data = await response.json();
         setCourses(data);
       } catch (error) {
@@ -113,11 +121,16 @@ const HomePage = () => {
             <p>Загрузка курсов...</p>
           ) : (
             <div className="courses-grid">
-              {courses.map((course, index) => (
+              {courses.map((course) => (
                 <CourseCard
-                  key={index}
-                  {...course}
-                  onEnroll={() => console.log("Записаться на:", course.title)}
+                  key={course.id}
+                  category={getCategoryLabel(course.course_type)}
+                  gradient={getGradientForCourse(course.id)}
+                  title={course.title}
+                  description={course.description}
+                  instructor={course.full_name}
+                  duration={`${course.duration_weeks} недель`}
+                  onEnroll={() => () => 0}
                 />
               ))}
             </div>

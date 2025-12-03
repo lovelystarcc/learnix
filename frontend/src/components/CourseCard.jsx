@@ -4,43 +4,34 @@ const CourseCard = ({
   title,
   description,
   instructor,
-  instructorAvatar,
-  students,
-  rating,
   duration,
-  level,
   onEnroll,
 }) => {
   return (
     <div className="course-card">
       <div
         className="course-image"
-        style={{ background: gradient }}
+        style={{ background: gradient || "#ccc" }}
       >
-        <span className="course-badge">{category}</span>
+        <span className="course-badge">{category || "Курс"}</span>
       </div>
 
       <div className="course-content">
-        <h3 className="course-title">{title}</h3>
-        <p className="course-description">{description}</p>
+        <h3 className="course-title">{title || "Без названия"}</h3>
+        <p className="course-description">{description || "Описание отсутствует"}</p>
 
         <div className="course-meta">
           <div className="instructor">
-            <div className="instructor-avatar">{instructorAvatar}</div>
-            <span>{instructor}</span>
-          </div>
-          <div className="course-stats">
-            <span>👥 {students}</span>
-            <span>⭐ {rating}</span>
+            <div className="instructor-avatar-small">
+              {instructor[0]}
+            </div>
+            <span>{instructor || "Преподаватель"}</span>
           </div>
         </div>
 
         <div className="course-footer">
           <div className="course-info">
-            <span className="course-duration">⏱ {duration}</span>
-            <span className={`course-level level-${level.toLowerCase()}`}>
-              {level}
-            </span>
+            <span className="course-duration">⏱ {duration ?? "—"}</span>
           </div>
           <button
             className="btn btn-primary"

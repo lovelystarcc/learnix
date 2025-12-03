@@ -3,6 +3,8 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import CourseCard from "../components/CourseCard";
 import AuthModal from "../components/AuthModal";
+import { getCategoryLabel } from "../utils/courseUtils";
+import { getGradientForCourse } from "../utils/courseUtils";
 
 const CoursesPage = () => {
   const [modalState, setModalState] = useState({ open: false, mode: "login" });
@@ -21,41 +23,6 @@ const CoursesPage = () => {
     { id: "business", label: "Бизнес" },
   ];
 
-  const categoryGradients = {
-    programming: [
-      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-      "linear-gradient(135deg, #5f72bd 0%, #9921e8 100%)",
-      "linear-gradient(135deg, #13547a 0%, #80d0c7 100%)",
-    ],
-    design: [
-      "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-      "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-    ],
-    marketing: [
-      "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-      "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-    ],
-    business: [
-      "linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%)",
-      "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
-    ],
-  };
-
-  const getCategoryLabel = (courseType) => {
-    const labels = {
-      programming: "Программирование",
-      design: "Дизайн",
-      marketing: "Маркетинг",
-      business: "Бизнес",
-    };
-    return labels[courseType] || courseType;
-  };
-
-  const getGradientForCourse = (courseType, index) => {
-    const gradients = categoryGradients[courseType] || categoryGradients.programming;
-    return gradients[index % gradients.length];
-  };
-
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -70,6 +37,8 @@ const CoursesPage = () => {
           setUser({
             email: data.email,
             fullName: data.full_name || data.fullName || data.email,
+            id: data.id,
+            role: data.role,
           });
         })
         .catch((err) => {
@@ -85,7 +54,7 @@ const CoursesPage = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await fetch("http://localhost:8080/courses");
+        const response = await fetch("http://localhost:8080/course");
         if (!response.ok) throw new Error("Ошибка загрузки курсов");
         const data = await response.json();
         setCourses(data);
@@ -107,15 +76,6 @@ const CoursesPage = () => {
       selectedCategory === "all" || course.course_type === selectedCategory;
     return matchesSearch && matchesCategory;
   });
-
-  const handleEnroll = (course) => {
-    if (!user) {
-      setModalState({ open: true, mode: "login" });
-      return;
-    }
-    console.log("Записаться на:", course.title);
-    // TODO: Реализовать запись на курс
-  };
 
   return (
     <>
@@ -194,20 +154,16 @@ const CoursesPage = () => {
             </div>
           ) : (
             <div className="courses-grid">
-              {filteredCourses.map((course, index) => (
+              {filteredCourses.map((course) => (
                 <CourseCard
-                  key={course.id || index}
+                  key={course.id}
                   category={getCategoryLabel(course.course_type)}
-                  gradient={getGradientForCourse(course.course_type, index)}
+                  gradient={getGradientForCourse(course.id)}
                   title={course.title}
                   description={course.description}
-                  instructor="Преподаватель"
-                  instructorAvatar="П"
-                  students="0"
-                  rating="0"
+                  instructor={course.full_name}
                   duration={`${course.duration_weeks} недель`}
-                  level="Средний"
-                  onEnroll={() => handleEnroll(course)}
+                  onEnroll={() => () => 0}
                 />
               ))}
             </div>

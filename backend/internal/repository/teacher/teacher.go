@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"gorm.io/gorm"
+
+	"github.com/lovelystarcc/learnix/internal/domain"
 )
 
 var (
@@ -14,10 +16,10 @@ var (
 )
 
 type TeacherRepository interface {
-	Create(ctx context.Context, teacher *Teacher) (*Teacher, error)
-	GetByID(ctx context.Context, userID int) (*Teacher, error)
-	List(ctx context.Context, limit, offset int) ([]*Teacher, error)
-	Update(ctx context.Context, teacher *Teacher) error
+	Create(ctx context.Context, teacher *domain.Teacher) (*domain.Teacher, error)
+	GetByID(ctx context.Context, userID int) (*domain.Teacher, error)
+	List(ctx context.Context, limit, offset int) ([]*domain.Teacher, error)
+	Update(ctx context.Context, teacher *domain.Teacher) error
 	SoftDelete(ctx context.Context, userID int) error
 	Exists(ctx context.Context, userID int) (bool, error)
 }
@@ -30,7 +32,7 @@ func NewRepository(db *gorm.DB) TeacherRepository {
 	return &repository{db: db}
 }
 
-func (r *repository) Create(ctx context.Context, teacher *Teacher) (*Teacher, error) {
+func (r *repository) Create(ctx context.Context, teacher *domain.Teacher) (*domain.Teacher, error) {
 	exists, err := r.Exists(ctx, teacher.UserID)
 	if err != nil {
 		return nil, err
@@ -49,8 +51,8 @@ func (r *repository) Create(ctx context.Context, teacher *Teacher) (*Teacher, er
 	return teacher, nil
 }
 
-func (r *repository) GetByID(ctx context.Context, userID int) (*Teacher, error) {
-	var t Teacher
+func (r *repository) GetByID(ctx context.Context, userID int) (*domain.Teacher, error) {
+	var t domain.Teacher
 	if err := r.db.WithContext(ctx).First(&t, "user_id = ?", userID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrTeacherNotFound
@@ -60,10 +62,13 @@ func (r *repository) GetByID(ctx context.Context, userID int) (*Teacher, error) 
 	return &t, nil
 }
 
-func (r *repository) List(ctx context.Context, limit, offset int) ([]*Teacher, error) {
-	var teachers []*Teacher
+func (r *repository) List(ctx context.Context, limit, offset int) ([]*domain.Teacher, error) {
+	var teachers []*domain.Teacher
 	if err := r.db.WithContext(ctx).
-		Order("created_at DESC").
+		Table("teachers t").
+		Select("t.*, u.full_name as full_name").
+		Joins("JOIN users u ON t.user_id = u.id").
+		Order("t.created_at DESC").
 		Limit(limit).
 		Offset(offset).
 		Find(&teachers).Error; err != nil {
@@ -72,7 +77,7 @@ func (r *repository) List(ctx context.Context, limit, offset int) ([]*Teacher, e
 	return teachers, nil
 }
 
-func (r *repository) Update(ctx context.Context, teacher *Teacher) error {
+func (r *repository) Update(ctx context.Context, teacher *domain.Teacher) error {
 	result := r.db.WithContext(ctx).Model(teacher).
 		Where("user_id = ?", teacher.UserID).
 		Updates(teacher)
@@ -86,7 +91,7 @@ func (r *repository) Update(ctx context.Context, teacher *Teacher) error {
 }
 
 func (r *repository) SoftDelete(ctx context.Context, userID int) error {
-	result := r.db.WithContext(ctx).Where("user_id = ?", userID).Delete(&Teacher{})
+	result := r.db.WithContext(ctx).Where("user_id = ?", userID).Delete(&domain.Teacher{})
 	if result.Error != nil {
 		return result.Error
 	}
@@ -98,7 +103,7 @@ func (r *repository) SoftDelete(ctx context.Context, userID int) error {
 
 func (r *repository) Exists(ctx context.Context, userID int) (bool, error) {
 	var count int64
-	if err := r.db.WithContext(ctx).Model(&Teacher{}).
+	if err := r.db.WithContext(ctx).Model(&domain.Teacher{}).
 		Where("user_id = ?", userID).
 		Count(&count).Error; err != nil {
 		return false, err

@@ -1,4 +1,4 @@
-package teacher
+package domain
 
 import (
 	"fmt"
@@ -6,7 +6,25 @@ import (
 	"time"
 
 	"github.com/go-chi/render"
+	"gorm.io/gorm"
 )
+
+type Teacher struct {
+	UserID         int            `gorm:"primaryKey" json:"user_id"`
+	Bio            string         `gorm:"type:text" json:"bio"`
+	FullName       string         `gorm:"->" json:"full_name"`
+	Specialization string         `gorm:"size:255" json:"specialization"`
+	Technologies   string         `gorm:"type:text" json:"technologies"`
+	CoursesCount   int            `gorm:"default:0" json:"courses_count"`
+	StudentsCount  int            `gorm:"default:0" json:"students_count"`
+	CreatedAt      time.Time      `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt      time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
+	DeletedAt      gorm.DeletedAt `gorm:"index" json:"deleted_at"`
+}
+
+func (Teacher) TableName() string {
+	return "teachers"
+}
 
 type TeacherRequest struct {
 	Bio            string `json:"bio"`
@@ -25,6 +43,7 @@ func (t *TeacherRequest) Bind(r *http.Request) error {
 type TeacherResponse struct {
 	UserID         int    `json:"user_id"`
 	Bio            string `json:"bio"`
+	FullName       string `json:"full_name"`
 	Specialization string `json:"specialization"`
 	Technologies   string `json:"technologies"`
 	CoursesCount   int    `json:"courses_count"`
@@ -41,6 +60,7 @@ func NewTeacherResponse(t *Teacher) *TeacherResponse {
 	return &TeacherResponse{
 		UserID:         t.UserID,
 		Bio:            t.Bio,
+		FullName:       t.FullName,
 		Specialization: t.Specialization,
 		Technologies:   t.Technologies,
 		CoursesCount:   t.CoursesCount,

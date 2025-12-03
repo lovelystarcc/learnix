@@ -40,6 +40,7 @@ const TeachersPage = () => {
             id: data.id,
             email: data.email,
             fullName: data.full_name || data.fullName || data.email,
+            role: data.role,
           });
         })
         .catch((err) => {
@@ -69,10 +70,8 @@ const TeachersPage = () => {
     fetchTeachers();
   }, []);
 
-  // Функция для получения имени преподавателя (пока используем user_id, так как нет связи с users)
   const getTeacherName = (teacher) => {
-    // TODO: Когда будет связь с users, получать имя оттуда
-    return `Преподаватель #${teacher.user_id}`;
+    return `${teacher.full_name}`;
   };
 
   return (

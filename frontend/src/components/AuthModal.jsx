@@ -51,7 +51,8 @@ const AuthModal = ({
           onSuccess?.({ 
             id: userData.id,
             email: userData.email, 
-            fullName: userData.full_name || userData.fullName || userData.email 
+            fullName: userData.full_name || userData.fullName || userData.email,
+            role: userData.role
           });
         } else {
           onSuccess?.({ email: data.email, fullName: data.fullName || data.full_name });
@@ -100,7 +101,7 @@ const AuthModal = ({
                   </div>
                   <div className="form-group">
                     <label>Полное имя</label>
-                    <input type="text" placeholder="Иван Петров" />
+                    <input type="text" placeholder="Иван Петров" required />
                   </div>
                 </>
               )}

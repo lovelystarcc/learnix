@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lovelystarcc/learnix/internal/api"
+	"github.com/lovelystarcc/learnix/internal/presenter"
 
 	"github.com/go-chi/render"
 	"github.com/golang-jwt/jwt/v5"
@@ -34,7 +34,7 @@ func (m *AuthMiddleware) Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			render.Render(w, r, api.NewErrResponse(http.StatusUnauthorized,
+			render.Render(w, r, presenter.NewErrResponse(http.StatusUnauthorized,
 				fmt.Errorf("missing or invalid token")))
 			return
 		}
@@ -50,14 +50,14 @@ func (m *AuthMiddleware) Auth(next http.Handler) http.Handler {
 		})
 
 		if err != nil || !token.Valid {
-			render.Render(w, r, api.NewErrResponse(http.StatusUnauthorized,
+			render.Render(w, r, presenter.NewErrResponse(http.StatusUnauthorized,
 				fmt.Errorf("invalid token")))
 			return
 		}
 
 		userID, err := strconv.Atoi(claims.UserID)
 		if err != nil {
-			render.Render(w, r, api.NewErrResponse(http.StatusUnauthorized,
+			render.Render(w, r, presenter.NewErrResponse(http.StatusUnauthorized,
 				fmt.Errorf("invalid user id")))
 			return
 		}

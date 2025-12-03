@@ -15,12 +15,16 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/lovelystarcc/learnix/internal/config"
-	"github.com/lovelystarcc/learnix/internal/course"
 	"github.com/lovelystarcc/learnix/internal/lib/logger"
 	"github.com/lovelystarcc/learnix/internal/middleware"
 	"github.com/lovelystarcc/learnix/internal/storage"
-	"github.com/lovelystarcc/learnix/internal/teacher"
-	"github.com/lovelystarcc/learnix/internal/user"
+
+	"github.com/lovelystarcc/learnix/internal/api"
+	"github.com/lovelystarcc/learnix/internal/usecase"
+
+	courserepo "github.com/lovelystarcc/learnix/internal/repository/course"
+	teacherrepo "github.com/lovelystarcc/learnix/internal/repository/teacher"
+	userrepo "github.com/lovelystarcc/learnix/internal/repository/user"
 )
 
 func main() {
@@ -65,16 +69,17 @@ func main() {
 	secret := []byte(cfg.JWTSecret)
 	authMW := middleware.NewAuthMiddleware(secret)
 
-	userrepo := user.NewRepository(db)
-	userhandler := user.NewHandler(log, userrepo, secret,
-		time.Duration(cfg.JWTExpiryHours)*time.Hour,
-	)
+	userrepo := userrepo.NewRepository(db)
+	userusecase := usecase.NewUserUseCase(userrepo, secret, time.Duration(cfg.JWTExpiryHours)*time.Hour)
+	userhandler := api.NewUserHandler(log, userusecase)
 
-	courserepo := course.NewRepository(db)
-	coursehandler := course.NewHandler(log, courserepo)
+	courserepo := courserepo.NewRepository(db)
+	courseusecase := usecase.NewCourseUseCase(courserepo)
+	coursehandler := api.NewCourseHandler(log, courseusecase)
 
-	teacherrepo := teacher.NewRepository(db)
-	teacherhandler := teacher.NewHandler(log, teacherrepo)
+	teacherrepo := teacherrepo.NewRepository(db)
+	teacherusecase := usecase.NewTeacherUseCase(teacherrepo)
+	teacherhandler := api.NewTeacherHandler(log, teacherusecase)
 
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   strings.Split(cfg.CORSAllowedOrigins, ","),
@@ -95,16 +100,10 @@ func main() {
 	router.Post("/user/login", userhandler.Login)
 
 	router.Get("/course", coursehandler.GetAll)
-	router.Route("/course", func(r chi.Router) {
-		r.Use(authMW.Auth)
-		r.Post("/", coursehandler.Create)
-	})
+	router.With(authMW.Auth).Post("/course", coursehandler.Create)
 
 	router.Get("/teacher", teacherhandler.GetAll)
-	router.Route("/teacher", func(r chi.Router) {
-		r.Use(authMW.Auth)
-		r.Post("/", teacherhandler.Create)
-	})
+	router.With(authMW.Auth).Post("/teacher", teacherhandler.Create)
 
 	log.Info("starting server", "address", address)
 

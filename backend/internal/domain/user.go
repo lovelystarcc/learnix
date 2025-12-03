@@ -1,4 +1,4 @@
-package user
+package domain
 
 import (
 	"fmt"
@@ -7,7 +7,23 @@ import (
 	"time"
 
 	"github.com/go-chi/render"
+	"gorm.io/gorm"
 )
+
+type User struct {
+	ID        int            `gorm:"primaryKey;autoIncrement" json:"id"`
+	Email     string         `gorm:"uniqueIndex;not null;size:255" json:"email"`
+	Password  string         `gorm:"column:password;not null;size:255" json:"-"`
+	FullName  string         `gorm:"column:full_name;not null;size:255" json:"full_name"`
+	Role      string         `gorm:"not null;size:20;check:role IN ('student', 'teacher', 'admin')" json:"role"`
+	CreatedAt time.Time      `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at"`
+}
+
+func (User) TableName() string {
+	return "users"
+}
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 var passwordRegex = regexp.MustCompile(`^[a-zA-Z0-9]{6,}$`)
@@ -38,12 +54,12 @@ func (u *UserRequest) Bind(r *http.Request) error {
 	return nil
 }
 
-type LoginRequest struct {
+type UserLoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-func (u *LoginRequest) Bind(r *http.Request) error {
+func (u *UserLoginRequest) Bind(r *http.Request) error {
 	if u.Email == "" {
 		return fmt.Errorf("email is required")
 	}
@@ -54,15 +70,15 @@ func (u *LoginRequest) Bind(r *http.Request) error {
 }
 
 type UserResponse struct {
-	ID        int    `json:"id"`
-	Email     string `json:"email"`
-	FullName  string `json:"full_name"`
-	Role      string `json:"role"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
+	ID        int       `json:"id"`
+	Email     string    `json:"email"`
+	FullName  string    `json:"full_name"`
+	Role      string    `json:"role"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type LoginResponse struct {
+type UserLoginResponse struct {
 	Email    string `json:"email"`
 	FullName string `json:"full_name"`
 	Token    string `json:"token"`
@@ -78,17 +94,17 @@ func NewUserResponse(u *User) *UserResponse {
 		Email:     u.Email,
 		FullName:  u.FullName,
 		Role:      u.Role,
-		CreatedAt: u.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: u.UpdatedAt.Format(time.RFC3339),
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
 	}
 }
 
-func (n *LoginResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (n *UserLoginResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func NewLoginResponse(email, fullName, token string) *LoginResponse {
-	return &LoginResponse{Email: email, FullName: fullName, Token: token}
+func NewUserLoginResponse(email, fullName, token string) *UserLoginResponse {
+	return &UserLoginResponse{Email: email, FullName: fullName, Token: token}
 }
 
 func NewUserListResponse(users []*User) []render.Renderer {

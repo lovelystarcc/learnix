@@ -46,12 +46,17 @@ const Header = ({ user, authLoading, onLogin, onRegister, onToggleMenu }) => {
     return currentPath === path || currentPath.startsWith(path + "/");
   };
 
-  const navItems = [
+  const baseNavItems = [
     { href: "/", label: "Главная" },
     { href: "/courses", label: "Курсы" },
     { href: "/teachers", label: "Преподаватели" },
     { href: "/my-courses", label: "Мои курсы" },
   ];
+
+  // Добавляем ссылку для преподавателей
+  const navItems = user?.role === "teacher"
+    ? [...baseNavItems, { href: "/teacher-courses", label: "Управление" }]
+    : baseNavItems;
 
   return (
     <header>

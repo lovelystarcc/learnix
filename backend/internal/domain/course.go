@@ -1,4 +1,4 @@
-package course
+package domain
 
 import (
 	"fmt"
@@ -7,6 +7,23 @@ import (
 
 	"github.com/go-chi/render"
 )
+
+type Course struct {
+	ID            int       `gorm:"primaryKey;autoIncrement" json:"id"`
+	TeacherID     int       `gorm:"not null;index" json:"teacher_id"`
+	FullName      string    `gorm:"->" json:"full_name"`
+	Title         string    `gorm:"not null;size:255" json:"title"`
+	Description   string    `gorm:"type:text" json:"description"`
+	CourseType    string    `gorm:"not null;size:50;index;check:course_type IN ('programming', 'design', 'marketing', 'business')" json:"course_type"`
+	DurationWeeks int       `gorm:"not null;check:duration_weeks > 0" json:"duration_weeks"`
+	CreatedAt     time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt     time.Time `gorm:"autoUpdateTime" json:"updated_at"`
+	DeletedAt     time.Time `gorm:"index" json:"deleted_at"`
+}
+
+func (Course) TableName() string {
+	return "courses"
+}
 
 type CourseRequest struct {
 	Title         string `json:"title"`
@@ -41,6 +58,7 @@ func (c *CourseRequest) Bind(r *http.Request) error {
 type CourseResponse struct {
 	ID            int       `json:"id"`
 	TeacherID     int       `json:"teacher_id"`
+	FullName      string    `json:"full_name"`
 	Title         string    `json:"title"`
 	Description   string    `json:"description"`
 	CourseType    string    `json:"course_type"`
@@ -57,6 +75,7 @@ func NewCourseResponse(c *Course) *CourseResponse {
 	return &CourseResponse{
 		ID:            c.ID,
 		TeacherID:     c.TeacherID,
+		FullName:      c.FullName,
 		Title:         c.Title,
 		Description:   c.Description,
 		CourseType:    c.CourseType,
