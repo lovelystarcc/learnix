@@ -5,8 +5,16 @@ import (
 	"time"
 
 	"github.com/lovelystarcc/learnix/internal/domain"
-	repo "github.com/lovelystarcc/learnix/internal/repository/course"
 )
+
+type CourseRepository interface {
+	Create(ctx context.Context, course *domain.Course) (*domain.Course, error)
+	GetByID(ctx context.Context, id int) (*domain.Course, error)
+	List(ctx context.Context, teacherID *int, limit, offset int) ([]*domain.Course, error)
+	Update(ctx context.Context, course *domain.Course) error
+	SoftDelete(ctx context.Context, id int, deletedAt time.Time) error
+	Exists(ctx context.Context, id int) (bool, error)
+}
 
 type CourseUseCase interface {
 	Create(ctx context.Context, req *domain.CourseRequest) (*domain.Course, error)
@@ -14,10 +22,10 @@ type CourseUseCase interface {
 }
 
 type courseUseCase struct {
-	repo repo.CourseRepository
+	repo CourseRepository
 }
 
-func NewCourseUseCase(repo repo.CourseRepository) CourseUseCase {
+func NewCourseUseCase(repo CourseRepository) CourseUseCase {
 	return &courseUseCase{repo: repo}
 }
 

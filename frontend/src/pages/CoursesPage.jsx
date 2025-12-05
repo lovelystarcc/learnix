@@ -3,8 +3,9 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import CourseCard from "../components/CourseCard";
 import AuthModal from "../components/AuthModal";
-import { getCategoryLabel } from "../utils/courseUtils";
-import { getGradientForCourse } from "../utils/courseUtils";
+import { getCategories, getCategoryLabel, getGradientForCourse } from "../utils/courseUtils";
+import { fetchUser } from "../api/auth";
+import { getCourses } from "../api/course";
 
 const CoursesPage = () => {
   const [modalState, setModalState] = useState({ open: false, mode: "login" });
@@ -15,58 +16,37 @@ const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  const categories = [
-    { id: "all", label: "Все" },
-    { id: "programming", label: "Программирование" },
-    { id: "design", label: "Дизайн" },
-    { id: "marketing", label: "Маркетинг" },
-    { id: "business", label: "Бизнес" },
-  ];
-
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      fetch("http://localhost:8080/user/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("Не удалось восстановить пользователя");
-          return res.json();
-        })
-        .then((data) => {
-          setUser({
-            email: data.email,
-            fullName: data.full_name || data.fullName || data.email,
-            id: data.id,
-            role: data.role,
-          });
-        })
-        .catch((err) => {
-          console.error("Ошибка восстановления пользователя:", err);
-          localStorage.removeItem("token");
-        })
-        .finally(() => setAuthLoading(false));
-    } else {
-      setAuthLoading(false);
-    }
+    const restoreUser = async () => {
+      try {
+        const u = await fetchUser();
+        setUser(u);
+      } catch (err) {
+        console.error("Ошибка восстановления пользователя:", err);
+        localStorage.removeItem("token");
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+    restoreUser();
   }, []);
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    const loadCourses = async () => {
       try {
-        const response = await fetch("http://localhost:8080/course");
-        if (!response.ok) throw new Error("Ошибка загрузки курсов");
-        const data = await response.json();
+        const data = await getCourses();
+        
         setCourses(data);
-      } catch (error) {
-        console.error("Ошибка загрузки курсов:", error);
+      } catch (err) {
+        console.error("Ошибка загрузки курсов:", err);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchCourses();
-  }, []);
+    if (!authLoading) {
+      loadCourses();
+    }
+  }, [authLoading, user]);
 
   const filteredCourses = courses.filter((course) => {
     const matchesSearch =
@@ -87,7 +67,6 @@ const CoursesPage = () => {
         onToggleMenu={() => console.log("Мобильное меню")}
       />
 
-      {/* Page Header */}
       <section className="page-header">
         <div className="container">
           <h1 className="page-title">Каталог курсов</h1>
@@ -97,18 +76,11 @@ const CoursesPage = () => {
         </div>
       </section>
 
-      {/* Filters & Search */}
       <section className="section">
         <div className="container">
           <div className="filters-bar">
             <div className="search-box">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                stroke="currentColor"
-              >
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor">
                 <circle cx="8.5" cy="8.5" r="5.5" strokeWidth="2" />
                 <path d="M12 12l5 5" strokeWidth="2" strokeLinecap="round" />
               </svg>
@@ -120,12 +92,10 @@ const CoursesPage = () => {
               />
             </div>
             <div className="filter-buttons">
-              {categories.map((category) => (
+              {getCategories().map((category) => (
                 <button
                   key={category.id}
-                  className={`filter-btn ${
-                    selectedCategory === category.id ? "active" : ""
-                  }`}
+                  className={`filter-btn ${selectedCategory === category.id ? "active" : ""}`}
                   onClick={() => setSelectedCategory(category.id)}
                 >
                   {category.label}
@@ -134,21 +104,10 @@ const CoursesPage = () => {
             </div>
           </div>
 
-          {/* Courses Grid */}
           {loading ? (
             <p>Загрузка курсов...</p>
           ) : filteredCourses.length === 0 ? (
             <div className="no-results">
-              <svg
-                width="64"
-                height="64"
-                viewBox="0 0 64 64"
-                fill="none"
-                stroke="currentColor"
-              >
-                <circle cx="28" cy="28" r="18" strokeWidth="3" />
-                <path d="M42 42l14 14" strokeWidth="3" strokeLinecap="round" />
-              </svg>
               <h3>Курсы не найдены</h3>
               <p>Попробуйте изменить параметры поиска или фильтры</p>
             </div>
@@ -163,7 +122,6 @@ const CoursesPage = () => {
                   description={course.description}
                   instructor={course.full_name}
                   duration={`${course.duration_weeks} недель`}
-                  onEnroll={() => () => 0}
                 />
               ))}
             </div>
@@ -190,4 +148,3 @@ const CoursesPage = () => {
 };
 
 export default CoursesPage;
-

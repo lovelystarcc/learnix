@@ -42,7 +42,6 @@ const AuthModal = ({
         if (data.token) {
           localStorage.setItem("token", data.token);
         }
-        // Получаем полные данные пользователя после логина
         const userResponse = await fetch("http://localhost:8080/user/me", {
           headers: { Authorization: `Bearer ${data.token}` },
         });

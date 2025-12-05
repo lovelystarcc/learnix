@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_API_URL;
+
 export async function createCourse(title, description, courseType, durationWeeks, teacherId) {
   const token = localStorage.getItem("token");
   
@@ -5,7 +7,7 @@ export async function createCourse(title, description, courseType, durationWeeks
     throw new Error("Необходимо войти в систему");
   }
 
-  const res = await fetch("http://localhost:8080/course", {
+  const res = await fetch(`${API_URL}/course`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -41,8 +43,8 @@ export async function createCourse(title, description, courseType, durationWeeks
   return res.json();
 }
 
-export async function getCoursesByTeacher(teacherId) {
-  const res = await fetch(`http://localhost:8080/course?teacher_id=${teacherId}`);
+export async function getCourses() {
+  const res = await fetch(`${API_URL}/course`);
   
   if (!res.ok) {
     throw new Error("Ошибка загрузки курсов");
@@ -51,3 +53,13 @@ export async function getCoursesByTeacher(teacherId) {
   return res.json();
 }
 
+export async function getCoursesByTeacher(teacherId) {
+  const res = await fetch(`${API_URL}/course`);
+
+  if (!res.ok) {
+    throw new Error("Ошибка загрузки курсов");
+  }
+
+  const data = await res.json();
+  return data.filter(course => course.teacher_id === teacherId);
+}

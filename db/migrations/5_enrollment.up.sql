@@ -6,7 +6,6 @@ CREATE TABLE enrollments (
     CHECK (status IN ('active', 'completed', 'cancelled', 'paused')),
   progress_percent INT DEFAULT 0 CHECK (progress_percent >= 0 AND progress_percent <= 100),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   completed_at TIMESTAMP NULL,
   deleted_at TIMESTAMP NULL

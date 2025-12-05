@@ -6,8 +6,16 @@ import (
 	"time"
 
 	"github.com/lovelystarcc/learnix/internal/domain"
-	repo "github.com/lovelystarcc/learnix/internal/repository/teacher"
 )
+
+type TeacherRepository interface {
+	Create(ctx context.Context, teacher *domain.Teacher) (*domain.Teacher, error)
+	GetByID(ctx context.Context, userID int) (*domain.Teacher, error)
+	List(ctx context.Context, limit, offset int) ([]*domain.Teacher, error)
+	Update(ctx context.Context, teacher *domain.Teacher) error
+	SoftDelete(ctx context.Context, userID int) error
+	Exists(ctx context.Context, userID int) (bool, error)
+}
 
 type TeacherUseCase interface {
 	Create(ctx context.Context, req *domain.TeacherRequest) (*domain.Teacher, error)
@@ -19,10 +27,10 @@ var (
 )
 
 type teacherUseCase struct {
-	repo repo.TeacherRepository
+	repo TeacherRepository
 }
 
-func NewTeacherUseCase(repo repo.TeacherRepository) TeacherUseCase {
+func NewTeacherUseCase(repo TeacherRepository) TeacherUseCase {
 	return &teacherUseCase{repo: repo}
 }
 

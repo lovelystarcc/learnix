@@ -1,4 +1,3 @@
-// internal/usecase/user.go
 package usecase
 
 import (
@@ -8,9 +7,19 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/lovelystarcc/learnix/internal/domain"
-	repo "github.com/lovelystarcc/learnix/internal/repository/user"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type UserRepository interface {
+	Create(ctx context.Context, user *domain.User) (*domain.User, error)
+	GetByEmail(ctx context.Context, email string) (*domain.User, error)
+	GetByID(ctx context.Context, id int) (*domain.User, error)
+	List(ctx context.Context, limit, offset int) ([]*domain.User, error)
+	Update(ctx context.Context, user *domain.User) error
+	SoftDelete(ctx context.Context, id int) error
+	Exists(ctx context.Context, id int) (bool, error)
+	UpdateRole(ctx context.Context, userID int, role string) error
+}
 
 type UserUseCase interface {
 	Register(ctx context.Context, req *domain.UserRequest) (*domain.User, error)
@@ -20,12 +29,12 @@ type UserUseCase interface {
 }
 
 type userUseCase struct {
-	repo       repo.UserRepository
+	repo       UserRepository
 	secret     []byte
 	expiration time.Duration
 }
 
-func NewUserUseCase(r repo.UserRepository, secret []byte, expiration time.Duration) UserUseCase {
+func NewUserUseCase(r UserRepository, secret []byte, expiration time.Duration) UserUseCase {
 	return &userUseCase{repo: r, secret: secret, expiration: expiration}
 }
 

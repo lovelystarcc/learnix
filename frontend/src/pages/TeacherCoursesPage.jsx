@@ -3,7 +3,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import CourseCard from "../components/CourseCard";
 import AuthModal from "../components/AuthModal";
-import { createCourse, getCoursesByTeacher } from "../api/course";
+import { createCourse, getCourses, getCoursesByTeacher } from "../api/course";
 import { getGradientForCourse, getCategoryLabel } from "../utils/courseUtils";
 import { fetchUser } from "../api/auth";
 
@@ -25,7 +25,18 @@ const TeacherCoursesPage = () => {
   const [formSuccess, setFormSuccess] = useState(false);
 
   useEffect(() => {
-    fetchUser(setUser, setAuthLoading);
+    const restoreUser = async () => {
+      try {
+        const u = await fetchUser();
+        setUser(u);
+      } catch (err) {
+        console.error("Ошибка восстановления пользователя:", err);
+        localStorage.removeItem("token");
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+    restoreUser();
   }, []);
 
   useEffect(() => {
@@ -73,7 +84,7 @@ const TeacherCoursesPage = () => {
     }
 
     try {
-      const newCourse = await createCourse(
+      await createCourse(
         formData.title,
         formData.description,
         formData.courseType,
@@ -89,8 +100,7 @@ const TeacherCoursesPage = () => {
         durationWeeks: 4,
       });
 
-      // Обновляем список курсов
-      const updatedCourses = await getCoursesByTeacher(user.id);
+      const updatedCourses = await getCourses(user.id);
       setCourses(updatedCourses);
 
       setTimeout(() => {
@@ -105,7 +115,6 @@ const TeacherCoursesPage = () => {
     }
   };
 
-  // Проверка доступа
   if (!authLoading && (!user || user.role !== "teacher")) {
     return (
       <>
@@ -116,14 +125,7 @@ const TeacherCoursesPage = () => {
           onRegister={() => setModalState({ open: true, mode: "register" })}
           onToggleMenu={() => console.log("Мобильное меню")}
         />
-        <section className="page-header">
-          <div className="container">
-            <h1 className="page-title">Мои курсы (Преподаватель)</h1>
-            <p className="page-subtitle">
-              Эта страница доступна только для преподавателей
-            </p>
-          </div>
-        </section>
+
         <section className="section">
           <div className="container">
             <div className="no-results">
@@ -145,6 +147,7 @@ const TeacherCoursesPage = () => {
             </div>
           </div>
         </section>
+
         <Footer />
         <AuthModal
           isOpen={modalState.open}
@@ -172,7 +175,6 @@ const TeacherCoursesPage = () => {
         onToggleMenu={() => console.log("Мобильное меню")}
       />
 
-      {/* Page Header */}
       <section className="page-header">
         <div className="container">
           <h1 className="page-title">Мои курсы</h1>
@@ -182,7 +184,6 @@ const TeacherCoursesPage = () => {
         </div>
       </section>
 
-      {/* Create Course Section */}
       <section className="section">
         <div className="container">
           <div className="section-header">
@@ -293,7 +294,6 @@ const TeacherCoursesPage = () => {
       </section>
 
 
-      {/* My Courses List */}
       <section className="section">
         <div className="container">
           <h2 style={{ marginBottom: "1.5rem" }}>Мои курсы</h2>
@@ -307,20 +307,16 @@ const TeacherCoursesPage = () => {
             </div>
           ) : (
             <div className="courses-grid">
-              {courses.map((course, index) => (
+              {courses.map((course) => (
                 <CourseCard
-                  key={course.id || index}
+                  key={course.id}
                   category={getCategoryLabel(course.course_type)}
-                  gradient={getGradientForCourse(course.course_type, index)}
+                  gradient={getGradientForCourse(course.id)}
                   title={course.title}
                   description={course.description}
-                  instructor={user?.fullName || "Вы"}
-                  instructorAvatar={user?.fullName?.charAt(0).toUpperCase() || "П"}
-                  students="0"
-                  rating="0"
+                  instructor={course.full_name}
                   duration={`${course.duration_weeks} недель`}
-                  level="Средний"
-                  onEnroll={() => {}}
+                  onEnroll={() => () => 0}
                 />
               ))}
             </div>

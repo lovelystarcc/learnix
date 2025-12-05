@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/lovelystarcc/learnix/internal/domain"
+	"github.com/lovelystarcc/learnix/internal/usecase"
 )
 
 var (
@@ -15,20 +16,11 @@ var (
 	ErrTeacherAlreadyExists = errors.New("teacher already exists")
 )
 
-type TeacherRepository interface {
-	Create(ctx context.Context, teacher *domain.Teacher) (*domain.Teacher, error)
-	GetByID(ctx context.Context, userID int) (*domain.Teacher, error)
-	List(ctx context.Context, limit, offset int) ([]*domain.Teacher, error)
-	Update(ctx context.Context, teacher *domain.Teacher) error
-	SoftDelete(ctx context.Context, userID int) error
-	Exists(ctx context.Context, userID int) (bool, error)
-}
-
 type repository struct {
 	db *gorm.DB
 }
 
-func NewRepository(db *gorm.DB) TeacherRepository {
+func NewRepository(db *gorm.DB) usecase.TeacherRepository {
 	return &repository{db: db}
 }
 

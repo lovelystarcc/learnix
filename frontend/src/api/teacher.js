@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_API_URL;
+
 export async function createTeacher(bio, specialization, technologies) {
   const token = localStorage.getItem("token");
   
@@ -5,7 +7,7 @@ export async function createTeacher(bio, specialization, technologies) {
     throw new Error("Необходимо войти в систему");
   }
 
-  const res = await fetch("http://localhost:8080/teacher", {
+  const res = await fetch(`${API_URL}/teacher`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -21,7 +23,6 @@ export async function createTeacher(bio, specialization, technologies) {
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     
-    // Обработка различных типов ошибок
     if (res.status === 401) {
       throw new Error("Необходимо войти в систему");
     }
@@ -44,3 +45,26 @@ export async function createTeacher(bio, specialization, technologies) {
   return res.json();
 }
 
+export const getTeachers = async () => {
+  const res = await fetch(`${API_URL}/teacher`);
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+
+    if (res.status === 401) {
+      throw new Error("Необходимо войти в систему");
+    }
+
+    if (res.status === 404) {
+      throw new Error("Преподаватели не найдены");
+    }
+
+    if (res.status >= 500) {
+      throw new Error("Ошибка сервера. Попробуйте позже.");
+    }
+
+    throw new Error(errorData.error || "Ошибка загрузки преподавателей");
+  }
+
+  return res.json();
+};

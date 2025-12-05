@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/lovelystarcc/learnix/internal/domain"
+	"github.com/lovelystarcc/learnix/internal/usecase"
 )
 
 var (
@@ -15,29 +16,12 @@ var (
 	ErrUserAlreadyExists = errors.New("user already exists")
 )
 
-type UserRepository interface {
-	Create(ctx context.Context, user *domain.User) (*domain.User, error)
-	GetByEmail(ctx context.Context, email string) (*domain.User, error)
-	GetByID(ctx context.Context, id int) (*domain.User, error)
-	List(ctx context.Context, limit, offset int) ([]*domain.User, error)
-	Update(ctx context.Context, user *domain.User) error
-	SoftDelete(ctx context.Context, id int) error
-	Exists(ctx context.Context, id int) (bool, error)
-	UpdateRole(ctx context.Context, userID int, role string) error
-}
-
 type repository struct {
 	db *gorm.DB
 }
 
-func NewRepository(db *gorm.DB) UserRepository {
+func NewRepository(db *gorm.DB) usecase.UserRepository {
 	return &repository{db: db}
-}
-
-// RoleUpdater интерфейс для обновления роли пользователя
-// Используется другими модулями для изменения роли без прямой зависимости от UserRepository
-type RoleUpdater interface {
-	UpdateRole(ctx context.Context, userID int, role string) error
 }
 
 func (r *repository) Create(ctx context.Context, user *domain.User) (*domain.User, error) {

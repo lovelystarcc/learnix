@@ -4,6 +4,8 @@ import Footer from "../components/Footer";
 import TeacherCard from "../components/TeacherCard";
 import AuthModal from "../components/AuthModal";
 import TeacherApplicationModal from "../components/TeacherApplicationModal";
+import { getTeachers } from "../api/teacher";
+import { fetchUser } from "../api/auth";
 
 const TeachersPage = () => {
   const [modalState, setModalState] = useState({ open: false, mode: "login" });
@@ -26,48 +28,33 @@ const TeachersPage = () => {
   ];
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      fetch("http://localhost:8080/user/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("Не удалось восстановить пользователя");
-          return res.json();
-        })
-        .then((data) => {
-          setUser({
-            id: data.id,
-            email: data.email,
-            fullName: data.full_name || data.fullName || data.email,
-            role: data.role,
-          });
-        })
-        .catch((err) => {
-          console.error("Ошибка восстановления пользователя:", err);
-          localStorage.removeItem("token");
-        })
-        .finally(() => setAuthLoading(false));
-    } else {
-      setAuthLoading(false);
-    }
+    const restoreUser = async () => {
+      try {
+        const u = await fetchUser();
+        setUser(u);
+      } catch (err) {
+        console.error("Ошибка восстановления пользователя:", err);
+        localStorage.removeItem("token");
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+    restoreUser();
   }, []);
 
-  const fetchTeachers = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch("http://localhost:8080/teacher");
-      if (!response.ok) throw new Error("Ошибка загрузки преподавателей");
-      const data = await response.json();
+      const data = await getTeachers();
       setTeachers(data);
-    } catch (error) {
-      console.error("Ошибка загрузки преподавателей:", error);
+    } catch (err) {
+      console.error("Ошибка загрузки преподавателей:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTeachers();
+    fetchData();
   }, []);
 
   const getTeacherName = (teacher) => {
@@ -84,7 +71,6 @@ const TeachersPage = () => {
         onToggleMenu={() => console.log("Мобильное меню")}
       />
 
-      {/* Page Header */}
       <section className="page-header">
         <div className="container">
           <h1 className="page-title">Наши преподаватели</h1>
@@ -94,7 +80,6 @@ const TeachersPage = () => {
         </div>
       </section>
 
-      {/* Teachers Grid */}
       <section className="section">
         <div className="container">
           {loading ? (
@@ -135,14 +120,13 @@ const TeachersPage = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
+    {user?.role === "student" && (
       <section className="cta-section">
         <div className="container">
           <div className="cta-content">
             <h2>Хотите стать преподавателем?</h2>
             <p>
-              Поделитесь своими знаниями с тысячами студентов и зарабатывайте на
-              обучении
+              Поделитесь своими знаниями с тысячами студентов и зарабатывайте на обучении
             </p>
             <button
               className="btn btn-white btn-lg"
@@ -160,6 +144,7 @@ const TeachersPage = () => {
           </div>
         </div>
       </section>
+    )}
 
       <Footer />
 
@@ -175,7 +160,6 @@ const TeachersPage = () => {
         }
         onSuccess={(userData) => {
           setUser(userData);
-          // После успешного входа, если пользователь хотел подать заявку, открываем форму
           if (pendingApplication) {
             setPendingApplication(false);
             setApplicationModalOpen(true);
@@ -188,8 +172,7 @@ const TeachersPage = () => {
         onClose={() => setApplicationModalOpen(false)}
         user={user}
         onSuccess={() => {
-          // Обновляем список преподавателей после успешного создания
-          fetchTeachers();
+          getTeachers();
           setApplicationModalOpen(false);
         }}
       />

@@ -23,6 +23,7 @@ import (
 	"github.com/lovelystarcc/learnix/internal/usecase"
 
 	courserepo "github.com/lovelystarcc/learnix/internal/repository/course"
+	enrollmentrepo "github.com/lovelystarcc/learnix/internal/repository/enrollment"
 	teacherrepo "github.com/lovelystarcc/learnix/internal/repository/teacher"
 	userrepo "github.com/lovelystarcc/learnix/internal/repository/user"
 )
@@ -81,6 +82,10 @@ func main() {
 	teacherusecase := usecase.NewTeacherUseCase(teacherrepo)
 	teacherhandler := api.NewTeacherHandler(log, teacherusecase)
 
+	enrollmentrepo := enrollmentrepo.NewRepository(db)
+	enrollmentusecase := usecase.NewEnrollmentUseCase(enrollmentrepo)
+	enrollmenthandler := api.NewEnrollmentHandler(log, enrollmentusecase)
+
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   strings.Split(cfg.CORSAllowedOrigins, ","),
 		AllowedMethods:   strings.Split(cfg.CORSAllowedMethods, ","),
@@ -104,6 +109,10 @@ func main() {
 
 	router.Get("/teacher", teacherhandler.GetAll)
 	router.With(authMW.Auth).Post("/teacher", teacherhandler.Create)
+
+	router.Get("/enrollment", enrollmenthandler.GetAll)
+	router.Get("/enrollment/{id}", enrollmenthandler.GetByID)
+	router.With(authMW.Auth).Post("/enrollment", enrollmenthandler.Enroll)
 
 	log.Info("starting server", "address", address)
 

@@ -6,8 +6,9 @@ import CourseCard from "../components/CourseCard";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 import AuthModal from "../components/AuthModal";
-import { getCategoryLabel } from "../utils/courseUtils";
-import { getGradientForCourse } from "../utils/courseUtils";
+import { getCategoryLabel, getGradientForCourse } from "../utils/courseUtils";
+import { fetchUser } from "../api/auth";
+import { getCourses } from "../api/course";
 
 const HomePage = () => {
   const [modalState, setModalState] = useState({ open: false, mode: "login" });
@@ -17,52 +18,37 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      fetch("http://localhost:8080/user/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("Не удалось восстановить пользователя");
-          return res.json();
-        })
-        .then((data) => {
-          setUser({
-            email: data.email,
-            fullName: data.fullName || data.email,
-            id: data.id,
-            role: data.role,
-          });
-        })
-        .catch((err) => {
-          console.error("Ошибка восстановления пользователя:", err);
-          localStorage.removeItem("token");
-        })
-        .finally(() => setAuthLoading(false));
-    } else {
-      setAuthLoading(false);
-    }
+    const restoreUser = async () => {
+      try {
+        const u = await fetchUser();
+        setUser(u);
+      } catch (err) {
+        console.error("Ошибка восстановления пользователя:", err);
+        localStorage.removeItem("token");
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+    restoreUser();
   }, []);
 
+
   useEffect(() => {
-    const fetchCourses = async () => {
+    const loadCourses = async () => {
       try {
-        const response = await fetch("http://localhost:8080/course");
-        if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.message || "Ошибка загрузки курсов")
-        }
-        const data = await response.json();
+        const data = await getCourses();
+        
         setCourses(data);
-      } catch (error) {
-        console.error("Ошибка загрузки курсов:", error);
+      } catch (err) {
+        console.error("Ошибка загрузки курсов:", err);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchCourses();
-  }, []);
+    if (!authLoading) {
+      loadCourses();
+    }
+  }, [authLoading, user]);
 
   const features = [
     { icon: "📚", title: "Разнообразные курсы", description: "Курсы по программированию, дизайну, маркетингу и другим направлениям" },
