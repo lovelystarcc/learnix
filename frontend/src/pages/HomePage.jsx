@@ -1,43 +1,19 @@
-import React, { useState, useEffect } from "react";
-import Header from "../components/Header";
+import { useState, useEffect } from "react";
 import HeroSection from "../components/HeroSection";
 import FeatureCard from "../components/FeatureCard";
 import CourseCard from "../components/CourseCard";
 import CTASection from "../components/CTASection";
-import Footer from "../components/Footer";
-import AuthModal from "../components/AuthModal";
 import { getCategoryLabel, getGradientForCourse } from "../utils/courseUtils";
-import { fetchUser } from "../api/auth";
 import { getCourses } from "../api/course";
 
-const HomePage = () => {
-  const [modalState, setModalState] = useState({ open: false, mode: "login" });
-  const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+const HomePage = ({ user }) => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const restoreUser = async () => {
-      try {
-        const u = await fetchUser();
-        setUser(u);
-      } catch (err) {
-        console.error("Ошибка восстановления пользователя:", err);
-        localStorage.removeItem("token");
-      } finally {
-        setAuthLoading(false);
-      }
-    };
-    restoreUser();
-  }, []);
-
 
   useEffect(() => {
     const loadCourses = async () => {
       try {
         const data = await getCourses();
-        
         setCourses(data);
       } catch (err) {
         console.error("Ошибка загрузки курсов:", err);
@@ -45,10 +21,8 @@ const HomePage = () => {
         setLoading(false);
       }
     };
-    if (!authLoading) {
-      loadCourses();
-    }
-  }, [authLoading, user]);
+    loadCourses();
+  }, []);
 
   const features = [
     { icon: "📚", title: "Разнообразные курсы", description: "Курсы по программированию, дизайну, маркетингу и другим направлениям" },
@@ -61,15 +35,7 @@ const HomePage = () => {
 
   return (
     <>
-      <Header
-        user={user}
-        authLoading={authLoading}
-        onLogin={() => setModalState({ open: true, mode: "login" })}
-        onRegister={() => setModalState({ open: true, mode: "register" })}
-        onToggleMenu={() => console.log("Мобильное меню")}
-      />
-
-      <HeroSection onRegister={() => setModalState({ open: true, mode: "register" })} />
+      <HeroSection onRegister={() => console.log("Открыть регистрацию")} />
 
       <section className="section">
         <div className="container">
@@ -116,7 +82,7 @@ const HomePage = () => {
                   description={course.description}
                   instructor={course.full_name}
                   duration={`${course.duration_weeks} недель`}
-                  onEnroll={() => () => 0}
+                  onEnroll={() => console.log("Записаться")}
                 />
               ))}
             </div>
@@ -131,23 +97,8 @@ const HomePage = () => {
       </section>
 
       <CTASection 
-        onRegister={() => setModalState({ open: true, mode: "register" })} 
+        onRegister={() => console.log("Открыть регистрацию")} 
         user={user}
-      />
-
-      <Footer />
-
-      <AuthModal
-        isOpen={modalState.open}
-        onClose={() => setModalState({ open: false, mode: "login" })}
-        mode={modalState.mode}
-        onToggleMode={() =>
-          setModalState({
-            open: true,
-            mode: modalState.mode === "login" ? "register" : "login"
-          })
-        }
-        onSuccess={(userData) => setUser(userData)}
       />
     </>
   );

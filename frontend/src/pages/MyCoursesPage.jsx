@@ -1,26 +1,12 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import StatCard from "../components/StatCard";
 import MyCourseCard from "../components/MyCourseCard";
 import AuthModal from "../components/AuthModal";
 
-/* ЭТОЙ СТРАНИЦЕ ПИЗДА, ПОТОМ ПЕРЕДЕЛАТЬ ВСЮ НАХУЙ! */
-/* ЭТОЙ СТРАНИЦЕ ПИЗДА, ПОТОМ ПЕРЕДЕЛАТЬ ВСЮ НАХУЙ! */
-/* ЭТОЙ СТРАНИЦЕ ПИЗДА, ПОТОМ ПЕРЕДЕЛАТЬ ВСЮ НАХУЙ! */
-/* ЭТОЙ СТРАНИЦЕ ПИЗДА, ПОТОМ ПЕРЕДЕЛАТЬ ВСЮ НАХУЙ! */
-/* ЭТОЙ СТРАНИЦЕ ПИЗДА, ПОТОМ ПЕРЕДЕЛАТЬ ВСЮ НАХУЙ! */
-/* ЭТОЙ СТРАНИЦЕ ПИЗДА, ПОТОМ ПЕРЕДЕЛАТЬ ВСЮ НАХУЙ! */
-/* ЭТОЙ СТРАНИЦЕ ПИЗДА, ПОТОМ ПЕРЕДЕЛАТЬ ВСЮ НАХУЙ! */
-/* ЭТОЙ СТРАНИЦЕ ПИЗДА, ПОТОМ ПЕРЕДЕЛАТЬ ВСЮ НАХУЙ! */
-/* ЭТОЙ СТРАНИЦЕ ПИЗДА, ПОТОМ ПЕРЕДЕЛАТЬ ВСЮ НАХУЙ! */
-/* ЭТОЙ СТРАНИЦЕ ПИЗДА, ПОТОМ ПЕРЕДЕЛАТЬ ВСЮ НАХУЙ! */
-/* ЭТОЙ СТРАНИЦЕ ПИЗДА, ПОТОМ ПЕРЕДЕЛАТЬ ВСЮ НАХУЙ! */
 
-const MyCoursesPage = () => {
-  const [modalState, setModalState] = useState({ open: false, mode: "login" });
-  const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+const MyCoursesPage = ({ user }) => {
   const [activeTab, setActiveTab] = useState("active");
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,34 +18,6 @@ const MyCoursesPage = () => {
     "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
     "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
   ];
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      fetch("http://localhost:8080/user/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("Не удалось восстановить пользователя");
-          return res.json();
-        })
-        .then((data) => {
-          setUser({
-            email: data.email,
-            fullName: data.full_name || data.fullName || data.email,
-            id: data.id,
-            role: data.role,
-          });
-        })
-        .catch((err) => {
-          console.error("Ошибка восстановления пользователя:", err);
-          localStorage.removeItem("token");
-        })
-        .finally(() => setAuthLoading(false));
-    } else {
-      setAuthLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
     // TODO: Когда будет API для enrollments, загружать курсы пользователя
@@ -136,16 +94,9 @@ const MyCoursesPage = () => {
     // TODO: Реализовать переход к курсу
   };
 
-  if (!user && !authLoading) {
+  if (!user) {
     return (
       <>
-        <Header
-          user={user}
-          authLoading={authLoading}
-          onLogin={() => setModalState({ open: true, mode: "login" })}
-          onRegister={() => setModalState({ open: true, mode: "register" })}
-          onToggleMenu={() => console.log("Мобильное меню")}
-        />
         <section className="page-header">
           <div className="container">
             <h1 className="page-title">Мои курсы</h1>
@@ -162,41 +113,18 @@ const MyCoursesPage = () => {
               <button
                 style={{ marginTop: "20px" }}
                 className="btn btn-primary"
-                onClick={() => setModalState({ open: true, mode: "login" })}
               >
                 Войти
               </button>
             </div>
           </div>
         </section>
-        <Footer />
-        <AuthModal
-          isOpen={modalState.open}
-          onClose={() => setModalState({ open: false, mode: "login" })}
-          mode={modalState.mode}
-          onToggleMode={() =>
-            setModalState({
-              open: true,
-              mode: modalState.mode === "login" ? "register" : "login",
-            })
-          }
-          onSuccess={(userData) => setUser(userData)}
-        />
       </>
     );
   }
 
   return (
     <>
-      <Header
-        user={user}
-        authLoading={authLoading}
-        onLogin={() => setModalState({ open: true, mode: "login" })}
-        onRegister={() => setModalState({ open: true, mode: "register" })}
-        onToggleMenu={() => console.log("Мобильное меню")}
-      />
-
-      {/* Page Header */}
       <section className="page-header">
         <div className="container">
           <h1 className="page-title">Мои курсы</h1>
@@ -206,7 +134,6 @@ const MyCoursesPage = () => {
         </div>
       </section>
 
-      {/* Dashboard Stats */}
       <section className="section">
         <div className="container">
           <div className="dashboard-stats">
@@ -301,7 +228,6 @@ const MyCoursesPage = () => {
         </div>
       </section>
 
-      {/* My Courses */}
       <section className="section">
         <div className="container">
           <div className="section-tabs">
@@ -375,21 +301,6 @@ const MyCoursesPage = () => {
           )}
         </div>
       </section>
-
-      <Footer />
-
-      <AuthModal
-        isOpen={modalState.open}
-        onClose={() => setModalState({ open: false, mode: "login" })}
-        mode={modalState.mode}
-        onToggleMode={() =>
-          setModalState({
-            open: true,
-            mode: modalState.mode === "login" ? "register" : "login",
-          })
-        }
-        onSuccess={(userData) => setUser(userData)}
-      />
     </>
   );
 };

@@ -1,18 +1,11 @@
-import React, { useState, useEffect } from "react";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import { useState, useEffect } from "react";
 import TeacherCard from "../components/TeacherCard";
-import AuthModal from "../components/AuthModal";
 import TeacherApplicationModal from "../components/TeacherApplicationModal";
 import { getTeachers } from "../api/teacher";
-import { fetchUser } from "../api/auth";
 
-const TeachersPage = () => {
-  const [modalState, setModalState] = useState({ open: false, mode: "login" });
+const TeachersPage = ({ user }) => {
   const [applicationModalOpen, setApplicationModalOpen] = useState(false);
   const [pendingApplication, setPendingApplication] = useState(false);
-  const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,21 +19,6 @@ const TeachersPage = () => {
     "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
     "linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%)",
   ];
-
-  useEffect(() => {
-    const restoreUser = async () => {
-      try {
-        const u = await fetchUser();
-        setUser(u);
-      } catch (err) {
-        console.error("Ошибка восстановления пользователя:", err);
-        localStorage.removeItem("token");
-      } finally {
-        setAuthLoading(false);
-      }
-    };
-    restoreUser();
-  }, []);
 
   const fetchData = async () => {
     try {
@@ -57,20 +35,10 @@ const TeachersPage = () => {
     fetchData();
   }, []);
 
-  const getTeacherName = (teacher) => {
-    return `${teacher.full_name}`;
-  };
+  const getTeacherName = (teacher) => teacher.full_name;
 
   return (
     <>
-      <Header
-        user={user}
-        authLoading={authLoading}
-        onLogin={() => setModalState({ open: true, mode: "login" })}
-        onRegister={() => setModalState({ open: true, mode: "register" })}
-        onToggleMenu={() => console.log("Мобильное меню")}
-      />
-
       <section className="page-header">
         <div className="container">
           <h1 className="page-title">Наши преподаватели</h1>
@@ -86,16 +54,6 @@ const TeachersPage = () => {
             <p>Загрузка преподавателей...</p>
           ) : teachers.length === 0 ? (
             <div className="no-results">
-              <svg
-                width="64"
-                height="64"
-                viewBox="0 0 64 64"
-                fill="none"
-                stroke="currentColor"
-              >
-                <circle cx="28" cy="28" r="18" strokeWidth="3" />
-                <path d="M42 42l14 14" strokeWidth="3" strokeLinecap="round" />
-              </svg>
               <h3>Преподаватели не найдены</h3>
               <p>Пока нет зарегистрированных преподавателей</p>
             </div>
@@ -120,59 +78,38 @@ const TeachersPage = () => {
         </div>
       </section>
 
-    {user?.role === "student" && (
-      <section className="cta-section">
-        <div className="container">
-          <div className="cta-content">
-            <h2>Хотите стать преподавателем?</h2>
-            <p>
-              Поделитесь своими знаниями с тысячами студентов и зарабатывайте на обучении
-            </p>
-            <button
-              className="btn btn-white btn-lg"
-              onClick={() => {
-                if (!user) {
-                  setPendingApplication(true);
-                  setModalState({ open: true, mode: "register" });
-                } else {
-                  setApplicationModalOpen(true);
-                }
-              }}
-            >
-              Подать заявку
-            </button>
+      {user?.role === "student" && (
+        <section className="cta-section">
+          <div className="container">
+            <div className="cta-content">
+              <h2>Хотите стать преподавателем?</h2>
+              <p>
+                Поделитесь своими знаниями с тысячами студентов и зарабатывайте на обучении
+              </p>
+              <button
+                className="btn btn-white btn-lg"
+                onClick={() => {
+                  if (!user) {
+                    setPendingApplication(true);
+                    pendingApplication(true)
+                  } else {
+                    setApplicationModalOpen(true);
+                  }
+                }}
+              >
+                Подать заявку
+              </button>
+            </div>
           </div>
-        </div>
-      </section>
-    )}
-
-      <Footer />
-
-      <AuthModal
-        isOpen={modalState.open}
-        onClose={() => setModalState({ open: false, mode: "login" })}
-        mode={modalState.mode}
-        onToggleMode={() =>
-          setModalState({
-            open: true,
-            mode: modalState.mode === "login" ? "register" : "login",
-          })
-        }
-        onSuccess={(userData) => {
-          setUser(userData);
-          if (pendingApplication) {
-            setPendingApplication(false);
-            setApplicationModalOpen(true);
-          }
-        }}
-      />
+        </section>
+      )}
 
       <TeacherApplicationModal
         isOpen={applicationModalOpen}
         onClose={() => setApplicationModalOpen(false)}
         user={user}
         onSuccess={() => {
-          getTeachers();
+          fetchData();
           setApplicationModalOpen(false);
         }}
       />
@@ -181,4 +118,3 @@ const TeachersPage = () => {
 };
 
 export default TeachersPage;
-

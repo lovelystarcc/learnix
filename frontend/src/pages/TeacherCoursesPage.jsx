@@ -1,16 +1,9 @@
-import React, { useState, useEffect } from "react";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import { useState, useEffect } from "react";
 import CourseCard from "../components/CourseCard";
-import AuthModal from "../components/AuthModal";
-import { createCourse, getCourses, getCoursesByTeacher } from "../api/course";
+import { createCourse, getCoursesByTeacher } from "../api/course";
 import { getGradientForCourse, getCategoryLabel } from "../utils/courseUtils";
-import { fetchUser } from "../api/auth";
 
-const TeacherCoursesPage = () => {
-  const [modalState, setModalState] = useState({ open: false, mode: "login" });
-  const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+const TeacherCoursesPage = ({ user }) => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -25,23 +18,8 @@ const TeacherCoursesPage = () => {
   const [formSuccess, setFormSuccess] = useState(false);
 
   useEffect(() => {
-    const restoreUser = async () => {
-      try {
-        const u = await fetchUser();
-        setUser(u);
-      } catch (err) {
-        console.error("Ошибка восстановления пользователя:", err);
-        localStorage.removeItem("token");
-      } finally {
-        setAuthLoading(false);
-      }
-    };
-    restoreUser();
-  }, []);
-
-  useEffect(() => {
     const fetchCourses = async () => {
-      if (!user || !user.id) {
+      if (!user || user.role !== "teacher") {
         setLoading(false);
         return;
       }
@@ -56,11 +34,7 @@ const TeacherCoursesPage = () => {
       }
     };
 
-    if (user && user.role === "teacher") {
-      fetchCourses();
-    } else {
-      setLoading(false);
-    }
+    fetchCourses();
   }, [user]);
 
   const handleFormChange = (e) => {
@@ -100,7 +74,7 @@ const TeacherCoursesPage = () => {
         durationWeeks: 4,
       });
 
-      const updatedCourses = await getCourses(user.id);
+      const updatedCourses = await getCoursesByTeacher(user.id);
       setCourses(updatedCourses);
 
       setTimeout(() => {
@@ -115,66 +89,8 @@ const TeacherCoursesPage = () => {
     }
   };
 
-  if (!authLoading && (!user || user.role !== "teacher")) {
-    return (
-      <>
-        <Header
-          user={user}
-          authLoading={authLoading}
-          onLogin={() => setModalState({ open: true, mode: "login" })}
-          onRegister={() => setModalState({ open: true, mode: "register" })}
-          onToggleMenu={() => console.log("Мобильное меню")}
-        />
-
-        <section className="section">
-          <div className="container">
-            <div className="no-results">
-              <h3>Доступ ограничен</h3>
-              <p>
-                {!user
-                  ? "Войдите в систему как преподаватель, чтобы получить доступ к этой странице"
-                  : "Эта страница доступна только для пользователей с ролью преподавателя"}
-              </p>
-              {!user && (
-                <button
-                  style={{ marginTop: "20px" }}
-                  className="btn btn-primary"
-                  onClick={() => setModalState({ open: true, mode: "login" })}
-                >
-                  Войти
-                </button>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <Footer />
-        <AuthModal
-          isOpen={modalState.open}
-          onClose={() => setModalState({ open: false, mode: "login" })}
-          mode={modalState.mode}
-          onToggleMode={() =>
-            setModalState({
-              open: true,
-              mode: modalState.mode === "login" ? "register" : "login",
-            })
-          }
-          onSuccess={(userData) => setUser(userData)}
-        />
-      </>
-    );
-  }
-
   return (
     <>
-      <Header
-        user={user}
-        authLoading={authLoading}
-        onLogin={() => setModalState({ open: true, mode: "login" })}
-        onRegister={() => setModalState({ open: true, mode: "register" })}
-        onToggleMenu={() => console.log("Мобильное меню")}
-      />
-
       <section className="page-header">
         <div className="container">
           <h1 className="page-title">Мои курсы</h1>
@@ -293,7 +209,6 @@ const TeacherCoursesPage = () => {
         </div>
       </section>
 
-
       <section className="section">
         <div className="container">
           <h2 style={{ marginBottom: "1.5rem" }}>Мои курсы</h2>
@@ -316,31 +231,15 @@ const TeacherCoursesPage = () => {
                   description={course.description}
                   instructor={course.full_name}
                   duration={`${course.duration_weeks} недель`}
-                  onEnroll={() => () => 0}
+                  onEnroll={() => console.log("Enroll clicked")}
                 />
               ))}
             </div>
           )}
         </div>
       </section>
-
-      <Footer />
-
-      <AuthModal
-        isOpen={modalState.open}
-        onClose={() => setModalState({ open: false, mode: "login" })}
-        mode={modalState.mode}
-        onToggleMode={() =>
-          setModalState({
-            open: true,
-            mode: modalState.mode === "login" ? "register" : "login",
-          })
-        }
-        onSuccess={(userData) => setUser(userData)}
-      />
     </>
   );
 };
 
 export default TeacherCoursesPage;
-

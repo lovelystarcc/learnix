@@ -1,85 +1,69 @@
 import { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import AuthModal from "./components/AuthModal";
 import HomePage from "./pages/HomePage";
 import CoursesPage from "./pages/CoursesPage";
 import TeachersPage from "./pages/TeachersPage";
 import MyCoursesPage from "./pages/MyCoursesPage";
 import TeacherCoursesPage from "./pages/TeacherCoursesPage";
+import { fetchUser } from "./api/auth";
 
 function App() {
-  const [currentPage, setCurrentPage] = useState("home");
+  const [modalState, setModalState] = useState({ open: false, mode: "login" });
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    const updatePage = () => {
-      const path = window.location.pathname;
-      if (path === "/courses" || path === "/courses.html") {
-        setCurrentPage("courses");
-      } else if (path === "/teachers" || path === "/teachers.html") {
-        setCurrentPage("teachers");
-      } else if (path === "/my-courses" || path === "/my-courses.html") {
-        setCurrentPage("my-courses");
-      } else if (path === "/teacher-courses" || path === "/teacher-courses.html") {
-        setCurrentPage("teacher-courses");
-      } else {
-        setCurrentPage("home");
+    const restoreUser = async () => {
+      try {
+        const u = await fetchUser();
+        setUser(u);
+      } catch (err) {
+        console.error("Ошибка восстановления пользователя:", err);
+        localStorage.removeItem("token");
+      } finally {
+        setAuthLoading(false);
       }
     };
-
-    updatePage();
-
-    // Обработка навигации через ссылки
-    const handleNavigation = (e) => {
-      if (e.target.tagName === "A" && e.target.href) {
-        const url = new URL(e.target.href);
-        if (url.pathname === "/courses" || url.pathname === "/courses.html") {
-          e.preventDefault();
-          window.history.pushState({}, "", "/courses");
-          setCurrentPage("courses");
-        } else if (url.pathname === "/teachers" || url.pathname === "/teachers.html") {
-          e.preventDefault();
-          window.history.pushState({}, "", "/teachers");
-          setCurrentPage("teachers");
-        } else if (url.pathname === "/my-courses" || url.pathname === "/my-courses.html") {
-          e.preventDefault();
-          window.history.pushState({}, "", "/my-courses");
-          setCurrentPage("my-courses");
-        } else if (url.pathname === "/teacher-courses" || url.pathname === "/teacher-courses.html") {
-          e.preventDefault();
-          window.history.pushState({}, "", "/teacher-courses");
-          setCurrentPage("teacher-courses");
-        } else if (url.pathname === "/" || url.pathname === "/index" || url.pathname === "/index.html") {
-          e.preventDefault();
-          window.history.pushState({}, "", "/");
-          setCurrentPage("home");
-        }
-      }
-    };
-
-    window.addEventListener("click", handleNavigation);
-    window.addEventListener("popstate", updatePage);
-
-    return () => {
-      window.removeEventListener("click", handleNavigation);
-      window.removeEventListener("popstate", updatePage);
-    };
+    restoreUser();
   }, []);
 
-  if (currentPage === "courses") {
-    return <CoursesPage />;
-  }
+  return (
+    <BrowserRouter>
+      <Header
+        user={user}
+        authLoading={authLoading}
+        onLogin={() => setModalState({ open: true, mode: "login" })}
+        onRegister={() => setModalState({ open: true, mode: "register" })}
+        onToggleMenu={() => console.log("Мобильное меню")}
+      />
 
-  if (currentPage === "teachers") {
-    return <TeachersPage />;
-  }
+      <Routes>
+        <Route path="/" element={<HomePage user={user} />} />
+        <Route path="/courses" element={<CoursesPage />} />
+        <Route path="/teachers" element={<TeachersPage />} />
+        <Route path="/my-courses" element={<MyCoursesPage user={user} />} />
+        <Route path="/teacher-courses" element={<TeacherCoursesPage user={user} />} />
+      </Routes>
 
-  if (currentPage === "my-courses") {
-    return <MyCoursesPage />;
-  }
+      <Footer />
 
-  if (currentPage === "teacher-courses") {
-    return <TeacherCoursesPage />;
-  }
-
-  return <HomePage />;
+      <AuthModal
+        isOpen={modalState.open}
+        onClose={() => setModalState({ open: false, mode: "login" })}
+        mode={modalState.mode}
+        onToggleMode={() =>
+          setModalState({
+            open: true,
+            mode: modalState.mode === "login" ? "register" : "login"
+          })
+        }
+        onSuccess={(userData) => setUser(userData)}
+      />
+    </BrowserRouter>
+  );
 }
 
 export default App;
