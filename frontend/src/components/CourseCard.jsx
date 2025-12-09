@@ -6,6 +6,8 @@ const CourseCard = ({
   instructor,
   duration,
   onEnroll,
+  enrolling,
+  enrolled,
 }) => {
   return (
     <div className="course-card">
@@ -33,12 +35,19 @@ const CourseCard = ({
           <div className="course-info">
             <span className="course-duration">⏱ {duration ?? "—"}</span>
           </div>
-          <button
-            className="btn btn-primary"
-            onClick={onEnroll}
-          >
-            Записаться
-          </button>
+          {enrolled ? (
+            <button className="btn btn-secondary" disabled>
+              ✓ Вы записаны
+            </button>
+          ) : (
+            <button
+              className="btn btn-primary"
+              onClick={onEnroll}
+              disabled={enrolling}
+            >
+              {enrolling ? "Записываем..." : "Записаться"}
+            </button>
+          )}
         </div>
       </div>
     </div>

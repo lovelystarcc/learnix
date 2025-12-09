@@ -41,9 +41,25 @@ function App() {
       />
 
       <Routes>
-        <Route path="/" element={<HomePage user={user} />} />
-        <Route path="/courses" element={<CoursesPage />} />
-        <Route path="/teachers" element={<TeachersPage />} />
+        <Route
+          path="/"
+          element={
+            <HomePage
+              user={user}
+              onRequireAuth={() => setModalState({ open: true, mode: "login" })}
+            />
+          }
+        />
+        <Route
+          path="/courses"
+          element={
+            <CoursesPage
+              user={user}
+              onRequireAuth={() => setModalState({ open: true, mode: "login" })}
+            />
+          }
+        />
+        <Route path="/teachers" element={<TeachersPage user={user} />} />
         <Route path="/my-courses" element={<MyCoursesPage user={user} />} />
         <Route path="/teacher-courses" element={<TeacherCoursesPage user={user} />} />
       </Routes>

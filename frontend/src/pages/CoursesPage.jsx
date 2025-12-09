@@ -1,13 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import CourseCard from "../components/CourseCard";
 import { getCategories, getCategoryLabel, getGradientForCourse } from "../utils/courseUtils";
 import { getCourses } from "../api/course";
+import { createEnrollment, getEnrollmentsByStudent } from "../api/enrollment";
 
-const CoursesPage = () => {
+const CoursesPage = ({ user, onRequireAuth }) => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [enrollingId, setEnrollingId] = useState(null);
+  const [enrollments, setEnrollments] = useState([]);
+  const [toastMessage, setToastMessage] = useState("");
+  const toastTimer = useRef(null);
 
   useEffect(() => {
     const loadCourses = async () => {
@@ -23,6 +28,22 @@ const CoursesPage = () => {
     loadCourses();
   }, []);
 
+  useEffect(() => {
+    const loadEnrollments = async () => {
+      if (!user) {
+        setEnrollments([]);
+        return;
+      }
+      try {
+        const data = await getEnrollmentsByStudent(user.id);
+        setEnrollments(data || []);
+      } catch (err) {
+        console.error("Ошибка загрузки записей:", err);
+      }
+    };
+    loadEnrollments();
+  }, [user]);
+
   const filteredCourses = courses.filter((course) => {
     const matchesSearch =
       course.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -31,6 +52,36 @@ const CoursesPage = () => {
       selectedCategory === "all" || course.course_type === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const showToast = (text) => {
+    setToastMessage(text);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToastMessage(""), 3000);
+  };
+
+  const handleEnroll = async (courseId, title) => {
+    if (!user) {
+      onRequireAuth?.();
+      showToast("Войдите, чтобы записаться на курс");
+      return;
+    }
+
+    if (enrollingId !== null) return;
+
+    try {
+      setEnrollingId(courseId);
+      await createEnrollment(courseId, user.id);
+      setEnrollments((prev) => [...prev, { course_id: courseId }]);
+      showToast(`Вы записались на курс «${title}»`);
+    } catch (err) {
+      showToast(err.message || "Не удалось записаться на курс");
+    } finally {
+      setEnrollingId(null);
+    }
+  };
+
+  const isEnrolled = (courseId) =>
+    enrollments?.some((enr) => enr && Number(enr.course_id) === Number(courseId));
 
   return (
     <>
@@ -89,12 +140,17 @@ const CoursesPage = () => {
                   description={course.description}
                   instructor={course.full_name}
                   duration={`${course.duration_weeks} недель`}
+                  onEnroll={() => handleEnroll(course.id, course.title)}
+                  enrolling={enrollingId === course.id}
+                  enrolled={isEnrolled(course.id)}
                 />
               ))}
             </div>
           )}
         </div>
       </section>
+
+      {toastMessage && <div className="toast">{toastMessage}</div>}
     </>
   );
 };

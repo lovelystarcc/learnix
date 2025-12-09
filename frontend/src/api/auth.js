@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = "http://localhost:8080";
 
 function getToken() {
   return localStorage.getItem("token");
@@ -10,7 +10,6 @@ export async function login(email, password) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
-
   if (!res.ok) {
     throw new Error("Ошибка авторизации");
   }

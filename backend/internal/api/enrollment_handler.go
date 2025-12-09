@@ -57,7 +57,7 @@ func (h *EnrollmentHandler) Enroll(w http.ResponseWriter, r *http.Request) {
 	log.Info("enrollment created", slog.Int("enrollment_id", enrollment.ID))
 }
 
-// GET /enrollments/{id}
+// GET /enrollment/{id}
 func (h *EnrollmentHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	const op = "enrollment.handler.getByID"
 	log := h.log.With(slog.String("op", op))

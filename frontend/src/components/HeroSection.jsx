@@ -1,4 +1,11 @@
-const HeroSection = ({ onRegister }) => {
+const iconsByType = {
+  programming: "💻",
+  design: "🎨",
+  marketing: "📈",
+  business: "💼",
+};
+
+const HeroSection = ({ onRegister, stats = [], categories = [] }) => {
   return (
     <section className="hero">
       <div className="hero-bg"></div>
@@ -33,44 +40,32 @@ const HeroSection = ({ onRegister }) => {
             </a>
           </div>
 
-          <div className="hero-stats">
-            <div className="stat-item">
-              <strong>5000+</strong>
-              <span>студентов</span>
+          {stats?.length > 0 && (
+            <div className="hero-stats">
+              {stats.map((item, idx) => (
+                <div className="stat-item" key={idx}>
+                  <strong>{item.value ?? "—"}</strong>
+                  <span>{item.label}</span>
+                </div>
+              ))}
             </div>
-            <div className="stat-item">
-              <strong>150+</strong>
-              <span>курсов</span>
-            </div>
-            <div className="stat-item">
-              <strong>85+</strong>
-              <span>преподавателей</span>
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="hero-image">
-          <div className="floating-card card-1">
-            <div className="card-icon">📚</div>
-            <div className="card-text">
-              <strong>Программирование</strong>
-              <span>42 курса</span>
+          {categories?.map((cat, idx) => (
+            <div className={`floating-card card-${idx + 1}`} key={cat.type ?? idx}>
+              <div className="card-icon">{cat.icon || iconsByType[cat.type] || "📘"}</div>
+              <div className="card-text">
+                <strong>{cat.title || "Категория"}</strong>
+                <span>
+                  {cat.count
+                    ? `${cat.count} курс${cat.count === 1 ? "" : cat.count < 5 ? "а" : "ов"}`
+                    : "Нет курсов"}
+                </span>
+              </div>
             </div>
-          </div>
-          <div className="floating-card card-2">
-            <div className="card-icon">🎨</div>
-            <div className="card-text">
-              <strong>Дизайн</strong>
-              <span>28 курсов</span>
-            </div>
-          </div>
-          <div className="floating-card card-3">
-            <div className="card-icon">💼</div>
-            <div className="card-text">
-              <strong>Бизнес</strong>
-              <span>35 курсов</span>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>

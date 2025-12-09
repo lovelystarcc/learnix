@@ -26,7 +26,7 @@ func (User) TableName() string {
 }
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-var passwordRegex = regexp.MustCompile(`^[a-zA-Z0-9]{6,}$`)
+var passwordRegex = regexp.MustCompile(`^[A-Za-z0-9!@#$%^&*]{8,}$`)
 var roleRegex = regexp.MustCompile(`^(student|teacher|admin)$`)
 var fullNameRegex = regexp.MustCompile(`^[a-zA-Zа-яА-ЯёЁ\s'-]{2,100}$`)
 

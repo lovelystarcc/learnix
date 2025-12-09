@@ -1,20 +1,48 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import HeroSection from "../components/HeroSection";
 import FeatureCard from "../components/FeatureCard";
 import CourseCard from "../components/CourseCard";
 import CTASection from "../components/CTASection";
 import { getCategoryLabel, getGradientForCourse } from "../utils/courseUtils";
 import { getCourses } from "../api/course";
+import { createEnrollment, getEnrollmentsByStudent } from "../api/enrollment";
 
-const HomePage = ({ user }) => {
+const HomePage = ({ user, onRequireAuth }) => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [enrollingId, setEnrollingId] = useState(null);
+  const [enrollments, setEnrollments] = useState([]);
+  const [toastMessage, setToastMessage] = useState("");
+  const toastTimer = useRef(null);
+  const [topCategories, setTopCategories] = useState([]);
+  const [heroStats, setHeroStats] = useState([]);
 
   useEffect(() => {
     const loadCourses = async () => {
       try {
         const data = await getCourses();
         setCourses(data);
+
+        const counts = data.reduce((acc, c) => {
+          if (!c?.course_type) return acc;
+          acc[c.course_type] = (acc[c.course_type] || 0) + 1;
+          return acc;
+        }, {});
+
+        const sortedCats = Object.entries(counts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([type, count]) => ({
+            type,
+            title: getCategoryLabel(type),
+            count,
+          }));
+
+        setTopCategories(sortedCats);
+        setHeroStats([
+          { label: "курсов", value: data.length || "—" },
+          { label: "категорий", value: Object.keys(counts).length || "—" },
+        ]);
       } catch (err) {
         console.error("Ошибка загрузки курсов:", err);
       } finally {
@@ -23,6 +51,52 @@ const HomePage = ({ user }) => {
     };
     loadCourses();
   }, []);
+
+  useEffect(() => {
+    const loadEnrollments = async () => {
+      if (!user) {
+        setEnrollments([]);
+        return;
+      }
+      try {
+        const data = await getEnrollmentsByStudent(user.id);
+        setEnrollments(data || []);
+      } catch (err) {
+        console.error("Ошибка загрузки записей:", err);
+      }
+    };
+    loadEnrollments();
+  }, [user]);
+
+  const showToast = (text) => {
+    setToastMessage(text);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToastMessage(""), 3000);
+  };
+
+  const handleEnroll = async (courseId, title) => {
+    if (!user) {
+      onRequireAuth?.();
+      showToast("Войдите, чтобы записаться на курс");
+      return;
+    }
+
+    if (enrollingId !== null) return;
+
+    try {
+      setEnrollingId(courseId);
+      await createEnrollment(courseId, user.id);
+      setEnrollments((prev) => [...prev, { course_id: courseId }]);
+      showToast(`Вы записались на курс «${title}»`);
+    } catch (err) {
+      showToast(err.message || "Не удалось записаться на курс");
+    } finally {
+      setEnrollingId(null);
+    }
+  };
+
+  const isEnrolled = (courseId) =>
+    enrollments?.some((enr) => enr && Number(enr.course_id) === Number(courseId));
 
   const features = [
     { icon: "📚", title: "Разнообразные курсы", description: "Курсы по программированию, дизайну, маркетингу и другим направлениям" },
@@ -35,7 +109,11 @@ const HomePage = ({ user }) => {
 
   return (
     <>
-      <HeroSection onRegister={() => console.log("Открыть регистрацию")} />
+      <HeroSection
+        onRegister={onRequireAuth}
+        stats={heroStats}
+        categories={topCategories}
+      />
 
       <section className="section">
         <div className="container">
@@ -82,7 +160,9 @@ const HomePage = ({ user }) => {
                   description={course.description}
                   instructor={course.full_name}
                   duration={`${course.duration_weeks} недель`}
-                  onEnroll={() => console.log("Записаться")}
+                  onEnroll={() => handleEnroll(course.id, course.title)}
+                  enrolling={enrollingId === course.id}
+                  enrolled={isEnrolled(course.id)}
                 />
               ))}
             </div>
@@ -95,6 +175,8 @@ const HomePage = ({ user }) => {
           </div>
         </div>
       </section>
+
+      {toastMessage && <div className="toast">{toastMessage}</div>}
 
       <CTASection 
         onRegister={() => console.log("Открыть регистрацию")} 
