@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/lovelystarcc/learnix/internal/domain"
@@ -19,6 +20,7 @@ type TeacherRepository interface {
 
 type TeacherUseCase interface {
 	Create(ctx context.Context, req *domain.TeacherRequest) (*domain.Teacher, error)
+	GetByID(ctx context.Context, userID int) (*domain.Teacher, error)
 	GetAll(ctx context.Context, limit, offset int) ([]*domain.Teacher, error)
 }
 
@@ -27,11 +29,12 @@ var (
 )
 
 type teacherUseCase struct {
-	repo TeacherRepository
+	repo     TeacherRepository
+	userRepo UserRepository
 }
 
-func NewTeacherUseCase(repo TeacherRepository) TeacherUseCase {
-	return &teacherUseCase{repo: repo}
+func NewTeacherUseCase(repo TeacherRepository, userRepo UserRepository) TeacherUseCase {
+	return &teacherUseCase{repo: repo, userRepo: userRepo}
 }
 
 func (uc *teacherUseCase) Create(ctx context.Context, req *domain.TeacherRequest) (*domain.Teacher, error) {
@@ -48,12 +51,22 @@ func (uc *teacherUseCase) Create(ctx context.Context, req *domain.TeacherRequest
 
 	created, err := uc.repo.Create(ctx, teacher)
 	if err != nil {
-		if errors.Is(err, ErrTeacherAlreadyExists) {
+		if strings.Contains(err.Error(), "already exists") {
 			return nil, ErrTeacherAlreadyExists
 		}
 		return nil, err
 	}
+
+	// Update user role to teacher
+	if uc.userRepo != nil {
+		_ = uc.userRepo.UpdateRole(ctx, req.UserID, "teacher")
+	}
+
 	return created, nil
+}
+
+func (uc *teacherUseCase) GetByID(ctx context.Context, userID int) (*domain.Teacher, error) {
+	return uc.repo.GetByID(ctx, userID)
 }
 
 func (uc *teacherUseCase) GetAll(ctx context.Context, limit, offset int) ([]*domain.Teacher, error) {

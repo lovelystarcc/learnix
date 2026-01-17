@@ -14,11 +14,16 @@ type CourseRepository interface {
 	Update(ctx context.Context, course *domain.Course) error
 	SoftDelete(ctx context.Context, id int, deletedAt time.Time) error
 	Exists(ctx context.Context, id int) (bool, error)
+	Search(ctx context.Context, query string, courseType string, limit, offset int) ([]*domain.Course, error)
 }
 
 type CourseUseCase interface {
 	Create(ctx context.Context, req *domain.CourseRequest) (*domain.Course, error)
+	GetByID(ctx context.Context, id int) (*domain.Course, error)
 	GetAll(ctx context.Context, teacherID *int, limit, offset int) ([]*domain.Course, error)
+	Update(ctx context.Context, id int, req *domain.CourseRequest) (*domain.Course, error)
+	Delete(ctx context.Context, id int) error
+	Search(ctx context.Context, query string, courseType string, limit, offset int) ([]*domain.Course, error)
 }
 
 type courseUseCase struct {
@@ -43,6 +48,37 @@ func (uc *courseUseCase) Create(ctx context.Context, req *domain.CourseRequest) 
 	return uc.repo.Create(ctx, course)
 }
 
+func (uc *courseUseCase) GetByID(ctx context.Context, id int) (*domain.Course, error) {
+	return uc.repo.GetByID(ctx, id)
+}
+
 func (uc *courseUseCase) GetAll(ctx context.Context, teacherID *int, limit, offset int) ([]*domain.Course, error) {
 	return uc.repo.List(ctx, teacherID, limit, offset)
+}
+
+func (uc *courseUseCase) Update(ctx context.Context, id int, req *domain.CourseRequest) (*domain.Course, error) {
+	course, err := uc.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	course.Title = req.Title
+	course.Description = req.Description
+	course.CourseType = req.CourseType
+	course.DurationWeeks = req.DurationWeeks
+	course.UpdatedAt = time.Now()
+
+	if err := uc.repo.Update(ctx, course); err != nil {
+		return nil, err
+	}
+
+	return course, nil
+}
+
+func (uc *courseUseCase) Delete(ctx context.Context, id int) error {
+	return uc.repo.SoftDelete(ctx, id, time.Now())
+}
+
+func (uc *courseUseCase) Search(ctx context.Context, query string, courseType string, limit, offset int) ([]*domain.Course, error) {
+	return uc.repo.Search(ctx, query, courseType, limit, offset)
 }

@@ -1,5 +1,5 @@
 import { login, register } from "../api/auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const AuthModal = ({ 
   isOpen, 
@@ -10,30 +10,60 @@ const AuthModal = ({
 }) => {
   const isLoginMode = mode === "login";
   const [toastMessage, setToastMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  
+  // Controlled form fields
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+    fullName: ""
+  });
+
+  // Reset form when modal opens/closes or mode changes
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        email: "",
+        password: "",
+        confirmPassword: "",
+        fullName: ""
+      });
+      setToastMessage("");
+    }
+  }, [isOpen, mode]);
 
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 3000);
   };
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const form = e.target;
-    const email = form[0].value;
-    const password = form[1].value;
-    const confirmPassword = form[2]?.value;
-    const fullName = form[3]?.value;
+    
+    const { email, password, confirmPassword, fullName } = formData;
 
     if (!isLoginMode) {
       if (password !== confirmPassword) {
         showToast("Пароли не совпадают");
         return;
       }
-      if (password.length < 6) {
-        showToast("Пароль должен содержать минимум 6 символов");
+      if (password.length < 8) {
+        showToast("Пароль должен содержать минимум 8 символов");
+        return;
+      }
+      if (!fullName.trim()) {
+        showToast("Введите ваше полное имя");
         return;
       }
     }
+
+    setLoading(true);
 
     try {
       let data;
@@ -58,68 +88,102 @@ const AuthModal = ({
         }
         onClose();
       } else {
-        data = await register(email, password, fullName, "student");
+        data = await register(email, password, fullName.trim(), "student");
         showToast("Регистрация прошла успешно! Войдите в систему.");
-        onToggleMode();
-        // если сервер возвращает данные о пользователе, можно вызвать:
-        // onSuccess?.({ email: data.email, fullName: data.fullName });
+        setTimeout(() => {
+          onToggleMode();
+        }, 1500);
       }
     } catch (err) {
       console.error("Ошибка авторизации:", err);
-      showToast("Ошибка: " + err.message);
+      showToast(err.message || "Произошла ошибка");
+    } finally {
+      setLoading(false);
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <>
-      {isOpen && (
-        <div id="authModal" className="modal">
-          <div className="modal-overlay" onClick={onClose}></div>
-          <div className="modal-content">
-            <button className="modal-close" onClick={onClose}>✕</button>
+      <div id="authModal" className="modal" onClick={onClose}>
+        <div className="modal-overlay"></div>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <button className="modal-close" onClick={onClose}>✕</button>
 
-            <h2 id="modalTitle">{isLoginMode ? "Вход в систему" : "Регистрация"}</h2>
-            <p className="modal-subtitle">
-              {isLoginMode ? "Войдите, чтобы продолжить обучение" : "Создайте аккаунт, чтобы начать"}
-            </p>
+          <h2 id="modalTitle">{isLoginMode ? "Вход в систему" : "Регистрация"}</h2>
+          <p className="modal-subtitle">
+            {isLoginMode ? "Войдите, чтобы продолжить обучение" : "Создайте аккаунт, чтобы начать"}
+          </p>
 
-            <form id="authForm" onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Email</label>
-                <input type="email" placeholder="your@email.com" required />
-              </div>
-              <div className="form-group">
-                <label>Пароль</label>
-                <input type="password" placeholder="Введите пароль" required />
-              </div>
-              {!isLoginMode && (
-                <>
-                  <div className="form-group">
-                    <label>Подтверждение пароля</label>
-                    <input type="password" placeholder="Повторите пароль" required />
-                  </div>
-                  <div className="form-group">
-                    <label>Полное имя</label>
-                    <input type="text" placeholder="Иван Петров" required />
-                  </div>
-                </>
-              )}
-              <button type="submit" className="btn btn-primary btn-block">
-                Продолжить
-              </button>
-            </form>
-
-            <div className="modal-footer">
-              <p id="toggleText">
-                {isLoginMode ? "Нет аккаунта?" : "Уже есть аккаунт?"}{" "}
-                <a onClick={onToggleMode}>
-                  {isLoginMode ? "Зарегистрироваться" : "Войти"}
-                </a>
-              </p>
+          <form id="authForm" onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Email</label>
+              <input 
+                type="email" 
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="your@email.com" 
+                required 
+              />
             </div>
+            <div className="form-group">
+              <label>Пароль</label>
+              <input 
+                type="password" 
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Введите пароль" 
+                required 
+              />
+            </div>
+            {!isLoginMode && (
+              <>
+                <div className="form-group">
+                  <label>Подтверждение пароля</label>
+                  <input 
+                    type="password" 
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="Повторите пароль" 
+                    required 
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Полное имя</label>
+                  <input 
+                    type="text" 
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    placeholder="Иван Петров" 
+                    required 
+                  />
+                </div>
+              </>
+            )}
+            <button 
+              type="submit" 
+              className="btn btn-primary btn-block"
+              disabled={loading}
+            >
+              {loading ? "Загрузка..." : "Продолжить"}
+            </button>
+          </form>
+
+          <div className="modal-footer">
+            <p id="toggleText">
+              {isLoginMode ? "Нет аккаунта?" : "Уже есть аккаунт?"}{" "}
+              <a onClick={onToggleMode} style={{ cursor: "pointer" }}>
+                {isLoginMode ? "Зарегистрироваться" : "Войти"}
+              </a>
+            </p>
           </div>
         </div>
-      )}
+      </div>
 
       {toastMessage && (
         <div className="toast">

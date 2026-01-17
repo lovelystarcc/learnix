@@ -76,29 +76,65 @@ export async function createEnrollment(courseId, studentId) {
   return res.json();
 }
 
-export async function completeLesson(enrollmentId, lessonId) {
+export async function updateEnrollmentProgress(enrollmentId, progress) {
   const token = localStorage.getItem("token");
   if (!token) {
     throw new Error("Необходимо войти в систему");
   }
 
-  const res = await fetch(`${API_URL}/enrollment/${enrollmentId}/complete-lesson`, {
-    method: "POST",
+  const res = await fetch(`${API_URL}/enrollment/${enrollmentId}/progress`, {
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ lesson_id: lessonId }),
+    body: JSON.stringify({ progress }),
   });
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    
+
     if (res.status === 401) {
       throw new Error("Сессия истекла. Пожалуйста, войдите снова.");
     }
-    
-    throw new Error(errorData.error || "Ошибка при обновлении прогресса");
+
+    if (res.status === 404) {
+      throw new Error("Запись не найдена");
+    }
+
+    throw new Error(errorData.error || "Не удалось обновить прогресс");
+  }
+
+  return res.json();
+}
+
+export async function updateEnrollmentStatus(enrollmentId, status) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    throw new Error("Необходимо войти в систему");
+  }
+
+  const res = await fetch(`${API_URL}/enrollment/${enrollmentId}/status`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ status }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+
+    if (res.status === 401) {
+      throw new Error("Сессия истекла. Пожалуйста, войдите снова.");
+    }
+
+    if (res.status === 404) {
+      throw new Error("Запись не найдена");
+    }
+
+    throw new Error(errorData.error || "Не удалось обновить статус");
   }
 
   return res.json();

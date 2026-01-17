@@ -68,3 +68,23 @@ export const getTeachers = async () => {
 
   return res.json();
 };
+
+export const getTeacherById = async (teacherId) => {
+  const res = await fetch(`${API_URL}/teacher/${teacherId}`);
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+
+    if (res.status === 404) {
+      throw new Error("Преподаватель не найден");
+    }
+
+    if (res.status >= 500) {
+      throw new Error("Ошибка сервера. Попробуйте позже.");
+    }
+
+    throw new Error(errorData.error || "Ошибка загрузки преподавателя");
+  }
+
+  return res.json();
+};

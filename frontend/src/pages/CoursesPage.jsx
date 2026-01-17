@@ -134,6 +134,7 @@ const CoursesPage = ({ user, onRequireAuth }) => {
               {filteredCourses.map((course) => (
                 <CourseCard
                   key={course.id}
+                  id={course.id}
                   category={getCategoryLabel(course.course_type)}
                   gradient={getGradientForCourse(course.id)}
                   title={course.title}

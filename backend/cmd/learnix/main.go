@@ -24,6 +24,7 @@ import (
 
 	courserepo "github.com/lovelystarcc/learnix/internal/repository/course"
 	enrollmentrepo "github.com/lovelystarcc/learnix/internal/repository/enrollment"
+	lessonrepo "github.com/lovelystarcc/learnix/internal/repository/lesson"
 	teacherrepo "github.com/lovelystarcc/learnix/internal/repository/teacher"
 	userrepo "github.com/lovelystarcc/learnix/internal/repository/user"
 )
@@ -79,12 +80,16 @@ func main() {
 	coursehandler := api.NewCourseHandler(log, courseusecase)
 
 	teacherrepo := teacherrepo.NewRepository(db)
-	teacherusecase := usecase.NewTeacherUseCase(teacherrepo)
+	teacherusecase := usecase.NewTeacherUseCase(teacherrepo, userrepo)
 	teacherhandler := api.NewTeacherHandler(log, teacherusecase)
 
 	enrollmentrepo := enrollmentrepo.NewRepository(db)
 	enrollmentusecase := usecase.NewEnrollmentUseCase(enrollmentrepo)
 	enrollmenthandler := api.NewEnrollmentHandler(log, enrollmentusecase)
+
+	lessonrepo := lessonrepo.NewRepository(db)
+	lessonusecase := usecase.NewLessonUseCase(lessonrepo, courserepo)
+	lessonhandler := api.NewLessonHandler(log, lessonusecase, courseusecase)
 
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   strings.Split(cfg.CORSAllowedOrigins, ","),
@@ -105,14 +110,27 @@ func main() {
 	router.Post("/user/login", userhandler.Login)
 
 	router.Get("/course", coursehandler.GetAll)
+	router.Get("/course/search", coursehandler.Search)
+	router.Get("/course/{id}", coursehandler.GetByID)
+	router.Get("/course/{id}/lessons", lessonhandler.GetByCourse)
 	router.With(authMW.Auth).Post("/course", coursehandler.Create)
+	router.With(authMW.Auth).Put("/course/{id}", coursehandler.Update)
+	router.With(authMW.Auth).Delete("/course/{id}", coursehandler.Delete)
+
+	router.Get("/lesson/{id}", lessonhandler.GetByID)
+	router.With(authMW.Auth).Post("/lesson", lessonhandler.Create)
+	router.With(authMW.Auth).Put("/lesson/{id}", lessonhandler.Update)
+	router.With(authMW.Auth).Delete("/lesson/{id}", lessonhandler.Delete)
 
 	router.Get("/teacher", teacherhandler.GetAll)
+	router.Get("/teacher/{id}", teacherhandler.GetByID)
 	router.With(authMW.Auth).Post("/teacher", teacherhandler.Create)
 
 	router.Get("/enrollment", enrollmenthandler.GetAll)
 	router.Get("/enrollment/{id}", enrollmenthandler.GetByID)
 	router.With(authMW.Auth).Post("/enrollment", enrollmenthandler.Enroll)
+	router.With(authMW.Auth).Patch("/enrollment/{id}/progress", enrollmenthandler.UpdateProgress)
+	router.With(authMW.Auth).Patch("/enrollment/{id}/status", enrollmenthandler.UpdateStatus)
 
 	log.Info("starting server", "address", address)
 

@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 import AuthModal from "./components/AuthModal";
 import HomePage from "./pages/HomePage";
 import CoursesPage from "./pages/CoursesPage";
+import CoursePage from "./pages/CoursePage";
 import TeachersPage from "./pages/TeachersPage";
 import MyCoursesPage from "./pages/MyCoursesPage";
 import TeacherCoursesPage from "./pages/TeacherCoursesPage";
@@ -14,6 +15,11 @@ function App() {
   const [modalState, setModalState] = useState({ open: false, mode: "login" });
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+  };
 
   useEffect(() => {
     const restoreUser = async () => {
@@ -37,6 +43,7 @@ function App() {
         authLoading={authLoading}
         onLogin={() => setModalState({ open: true, mode: "login" })}
         onRegister={() => setModalState({ open: true, mode: "register" })}
+        onLogout={handleLogout}
         onToggleMenu={() => console.log("Мобильное меню")}
       />
 
@@ -59,8 +66,25 @@ function App() {
             />
           }
         />
+        <Route
+          path="/course/:id"
+          element={
+            <CoursePage
+              user={user}
+              onRequireAuth={() => setModalState({ open: true, mode: "login" })}
+            />
+          }
+        />
         <Route path="/teachers" element={<TeachersPage user={user} />} />
-        <Route path="/my-courses" element={<MyCoursesPage user={user} />} />
+        <Route 
+          path="/my-courses" 
+          element={
+            <MyCoursesPage 
+              user={user} 
+              onRequireAuth={() => setModalState({ open: true, mode: "login" })}
+            />
+          } 
+        />
         <Route path="/teacher-courses" element={<TeacherCoursesPage user={user} />} />
       </Routes>
 

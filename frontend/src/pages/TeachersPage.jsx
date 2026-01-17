@@ -5,7 +5,6 @@ import { getTeachers } from "../api/teacher";
 
 const TeachersPage = ({ user }) => {
   const [applicationModalOpen, setApplicationModalOpen] = useState(false);
-  const [pendingApplication, setPendingApplication] = useState(false);
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -88,14 +87,7 @@ const TeachersPage = ({ user }) => {
               </p>
               <button
                 className="btn btn-white btn-lg"
-                onClick={() => {
-                  if (!user) {
-                    setPendingApplication(true);
-                    pendingApplication(true)
-                  } else {
-                    setApplicationModalOpen(true);
-                  }
-                }}
+                onClick={() => setApplicationModalOpen(true)}
               >
                 Подать заявку
               </button>

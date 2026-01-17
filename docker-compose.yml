@@ -41,6 +41,8 @@ services:
       - "8081:80"
     environment:
       - VITE_API_URL=/api
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

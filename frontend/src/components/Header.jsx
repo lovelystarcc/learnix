@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
-const Header = ({ user, authLoading, onLogin, onRegister, onToggleMenu }) => {
+const Header = ({ user, authLoading, onLogin, onRegister, onLogout, onToggleMenu }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const getInitial = (nameOrEmail) => {
@@ -52,6 +52,13 @@ const Header = ({ user, authLoading, onLogin, onRegister, onToggleMenu }) => {
             <div className="user-menu">
               <div className="user-avatar">{getInitial(user.fullName)}</div>
               <span className="user-name">{user.fullName}</span>
+              <button 
+                className="btn btn-outline-white btn-sm" 
+                onClick={onLogout}
+                style={{ marginLeft: '0.5rem' }}
+              >
+                Выйти
+              </button>
             </div>
           ) : (
             <>
@@ -82,6 +89,13 @@ const Header = ({ user, authLoading, onLogin, onRegister, onToggleMenu }) => {
               <div className="user-menu">
                 <div className="user-avatar">{getInitial(user.fullName)}</div>
                 <span className="user-name">{user.fullName}</span>
+                <button 
+                  className="btn btn-outline-white btn-block" 
+                  onClick={() => { setIsMenuOpen(false); onLogout?.(); }}
+                  style={{ marginTop: '0.5rem' }}
+                >
+                  Выйти
+                </button>
               </div>
             ) : (
               <>

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 
 	"github.com/lovelystarcc/learnix/internal/domain"
@@ -72,6 +73,34 @@ func (h *TeacherHandler) Create(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, domain.NewTeacherResponse(teacher))
 
 	log.Info("teacher created", slog.Int("user_id", teacher.UserID))
+}
+
+// GET /teacher/{id}
+func (h *TeacherHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+	const op = "teacher.handler.getByID"
+	log := h.log.With(slog.String("op", op))
+
+	idParam := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil || id <= 0 {
+		log.Error("invalid teacher id", slog.String("id", idParam))
+		render.Render(w, r, presenter.NewErrResponse(http.StatusBadRequest,
+			fmt.Errorf("invalid teacher id")))
+		return
+	}
+
+	teacher, err := h.uc.GetByID(r.Context(), id)
+	if err != nil {
+		log.Error("failed to get teacher", slog.Any("err", err))
+		render.Render(w, r, presenter.NewErrResponse(http.StatusNotFound,
+			fmt.Errorf("teacher not found")))
+		return
+	}
+
+	render.Status(r, http.StatusOK)
+	render.Render(w, r, domain.NewTeacherResponse(teacher))
+
+	log.Info("teacher retrieved", slog.Int("user_id", teacher.UserID))
 }
 
 // GET /teacher

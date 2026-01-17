@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import StatCard from "../components/StatCard";
 import MyCourseCard from "../components/MyCourseCard";
 import { getEnrollmentsByStudent } from "../api/enrollment";
 import { getCourses } from "../api/course";
 
-const MyCoursesPage = ({ user }) => {
+const MyCoursesPage = ({ user, onRequireAuth }) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("active");
   const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,44 +61,66 @@ const MyCoursesPage = ({ user }) => {
     }
   }, [user]);
 
-  const activeCourses = enrollments
+  const allCourses = enrollments
     .filter((enrollment) => enrollment && enrollment.course)
     .map((enrollment, index) => {
       const course = enrollment.course;
       const title = course?.title || "Без названия";
       const instructor = course?.full_name || "Преподаватель";
+      const progress = enrollment.progress_percent ?? 0;
 
       return {
         id: course?.id ?? index,
         title,
         instructor,
         instructorAvatar: instructor?.[0] || "П",
-        progress: enrollment.progress_percent ?? 0,
+        progress,
+        isCompleted: progress >= 100,
         nextLesson: undefined,
         weeksLeft: course?.duration_weeks,
         gradient: gradients[index % gradients.length],
       };
     });
 
-  const completedCourses = []; // пока пусто, можно позже добавить
+  const activeCourses = allCourses.filter((course) => !course.isCompleted);
+  const completedCourses = allCourses.filter((course) => course.isCompleted);
 
   const stats = [
-    { label: "Активных курса", value: activeCourses.length },
+    { label: "Активных курсов", value: activeCourses.length },
     { label: "Завершено", value: completedCourses.length },
   ];
 
-  const handleContinueCourse = (courseTitle) => {
-    console.log("Продолжить обучение:", courseTitle);
+  const handleContinueCourse = (courseId) => {
+    navigate(`/course/${courseId}`);
   };
 
   if (!user) {
     return (
-      <section className="page-header">
-        <div className="container">
-          <h1 className="page-title">Мои курсы</h1>
-          <p className="page-subtitle">Войдите в систему, чтобы увидеть свои курсы</p>
-        </div>
-      </section>
+      <>
+        <section className="page-header">
+          <div className="container">
+            <h1 className="page-title">Мои курсы</h1>
+            <p className="page-subtitle">Отслеживайте свой прогресс и продолжайте обучение</p>
+          </div>
+        </section>
+        <section className="section">
+          <div className="container">
+            <div className="auth-prompt-card">
+              <div className="auth-prompt-icon">📚</div>
+              <h3>Войдите, чтобы увидеть свои курсы</h3>
+              <p>После авторизации вы сможете отслеживать прогресс обучения, продолжать курсы с того места, где остановились, и получать персональные рекомендации.</p>
+              <div className="auth-prompt-buttons">
+                <button className="btn btn-primary btn-lg" onClick={() => onRequireAuth?.()}>
+                  Войти в аккаунт
+                </button>
+                <a href="/courses" className="btn btn-outline btn-lg">
+                  Посмотреть курсы
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </>
     );
   }
 
@@ -160,15 +184,32 @@ const MyCoursesPage = ({ user }) => {
                     nextLesson={course.nextLesson}
                     weeksLeft={course.weeksLeft}
                     gradient={course.gradient}
-                    onContinue={() => handleContinueCourse(course.title)}
+                    onContinue={() => handleContinueCourse(course.id)}
                   />
                 ))}
               </div>
             )
-          ) : (
+          ) : completedCourses.length === 0 ? (
             <div className="no-results">
               <h3>Нет завершенных курсов</h3>
               <p>Завершите курс, чтобы увидеть его здесь</p>
+            </div>
+          ) : (
+            <div className="my-courses-grid">
+              {completedCourses.map((course) => (
+                <MyCourseCard
+                  key={course.id}
+                  title={course.title}
+                  status="Завершён"
+                  progress={course.progress}
+                  instructor={course.instructor}
+                  instructorAvatar={course.instructorAvatar}
+                  weeksLeft={course.weeksLeft}
+                  gradient={course.gradient}
+                  onContinue={() => handleContinueCourse(course.id)}
+                  isCompleted={true}
+                />
+              ))}
             </div>
           )}
         </div>

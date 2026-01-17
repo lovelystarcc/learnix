@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 
 	"github.com/lovelystarcc/learnix/internal/domain"
@@ -57,6 +58,33 @@ func (h *CourseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	log.Info("course created", slog.Int("course_id", course.ID))
 }
 
+// GET /course/{id}
+func (h *CourseHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+	const op = "course.handler.getByID"
+	log := h.log.With(slog.String("op", op))
+
+	idParam := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil || id <= 0 {
+		log.Error("invalid course id", slog.String("id", idParam))
+		render.Render(w, r, presenter.NewErrResponse(http.StatusBadRequest,
+			fmt.Errorf("invalid course id")))
+		return
+	}
+
+	course, err := h.uc.GetByID(r.Context(), id)
+	if err != nil {
+		log.Error("failed to get course", slog.Any("err", err))
+		render.Render(w, r, presenter.NewErrResponse(http.StatusNotFound, err))
+		return
+	}
+
+	render.Status(r, http.StatusOK)
+	render.Render(w, r, domain.NewCourseResponse(course))
+
+	log.Info("course retrieved", slog.Int("course_id", course.ID))
+}
+
 // GET /course
 func (h *CourseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	const op = "course.handler.getAll"
@@ -95,4 +123,96 @@ func (h *CourseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	log.Info("courses retrieved",
 		slog.Int("count", len(list)),
 	)
+}
+
+// GET /course/search
+func (h *CourseHandler) Search(w http.ResponseWriter, r *http.Request) {
+	const op = "course.handler.search"
+	log := h.log.With(slog.String("op", op))
+
+	query := r.URL.Query().Get("q")
+	courseType := r.URL.Query().Get("type")
+
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	if limit == 0 {
+		limit = 20
+	}
+	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+
+	list, err := h.uc.Search(r.Context(), query, courseType, limit, offset)
+	if err != nil {
+		log.Error("failed to search courses", slog.Any("err", err))
+		render.Render(w, r, presenter.NewErrResponse(http.StatusInternalServerError, err))
+		return
+	}
+
+	render.Status(r, http.StatusOK)
+	render.RenderList(w, r, domain.NewCourseListResponse(list))
+
+	log.Info("courses search completed",
+		slog.String("query", query),
+		slog.String("type", courseType),
+		slog.Int("count", len(list)),
+	)
+}
+
+// PUT /course/{id}
+func (h *CourseHandler) Update(w http.ResponseWriter, r *http.Request) {
+	const op = "course.handler.update"
+	log := h.log.With(slog.String("op", op))
+
+	idParam := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil || id <= 0 {
+		log.Error("invalid course id", slog.String("id", idParam))
+		render.Render(w, r, presenter.NewErrResponse(http.StatusBadRequest,
+			fmt.Errorf("invalid course id")))
+		return
+	}
+
+	var req domain.CourseRequest
+	if err := render.DecodeJSON(r.Body, &req); err != nil {
+		log.Error("failed to decode request", slog.Any("err", err))
+		render.Render(w, r, presenter.NewErrResponse(http.StatusBadRequest,
+			fmt.Errorf("invalid request body")))
+		return
+	}
+
+	course, err := h.uc.Update(r.Context(), id, &req)
+	if err != nil {
+		log.Error("failed to update course", slog.Any("err", err))
+		render.Render(w, r, presenter.NewErrResponse(http.StatusInternalServerError, err))
+		return
+	}
+
+	render.Status(r, http.StatusOK)
+	render.Render(w, r, domain.NewCourseResponse(course))
+
+	log.Info("course updated", slog.Int("course_id", course.ID))
+}
+
+// DELETE /course/{id}
+func (h *CourseHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	const op = "course.handler.delete"
+	log := h.log.With(slog.String("op", op))
+
+	idParam := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil || id <= 0 {
+		log.Error("invalid course id", slog.String("id", idParam))
+		render.Render(w, r, presenter.NewErrResponse(http.StatusBadRequest,
+			fmt.Errorf("invalid course id")))
+		return
+	}
+
+	if err := h.uc.Delete(r.Context(), id); err != nil {
+		log.Error("failed to delete course", slog.Any("err", err))
+		render.Render(w, r, presenter.NewErrResponse(http.StatusInternalServerError, err))
+		return
+	}
+
+	render.Status(r, http.StatusNoContent)
+	w.WriteHeader(http.StatusNoContent)
+
+	log.Info("course deleted", slog.Int("course_id", id))
 }

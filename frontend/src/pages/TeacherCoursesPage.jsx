@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import CourseCard from "../components/CourseCard";
 import { createCourse, getCoursesByTeacher } from "../api/course";
+import { getLessonsByCourse, createLesson, updateLesson, deleteLesson } from "../api/lesson";
 import { getGradientForCourse, getCategoryLabel } from "../utils/courseUtils";
 
 const TeacherCoursesPage = ({ user }) => {
@@ -16,6 +16,17 @@ const TeacherCoursesPage = ({ user }) => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState(false);
+  
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState(null);
+  const [courseLessons, setCourseLessons] = useState([]);
+  const [lessonsLoading, setLessonsLoading] = useState(false);
+  const [showAddLesson, setShowAddLesson] = useState(false);
+  const [lessonForm, setLessonForm] = useState({ title: "", content: "" });
+  const [lessonFormLoading, setLessonFormLoading] = useState(false);
+  const [lessonFormError, setLessonFormError] = useState("");
+  const [editingLesson, setEditingLesson] = useState(null);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -87,6 +98,134 @@ const TeacherCoursesPage = ({ user }) => {
     } finally {
       setFormLoading(false);
     }
+  };
+
+  // Open edit modal and load lessons
+  const handleEditCourse = async (course) => {
+    setEditingCourse(course);
+    setEditModalOpen(true);
+    setLessonsLoading(true);
+    setShowAddLesson(false);
+    setLessonForm({ title: "", content: "" });
+    setEditingLesson(null);
+    setLessonFormError("");
+    
+    try {
+      const lessons = await getLessonsByCourse(course.id);
+      setCourseLessons(lessons || []);
+    } catch (err) {
+      console.error("Ошибка загрузки уроков:", err);
+      setCourseLessons([]);
+    } finally {
+      setLessonsLoading(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setEditModalOpen(false);
+    setEditingCourse(null);
+    setCourseLessons([]);
+    setShowAddLesson(false);
+    setEditingLesson(null);
+    setLessonFormError("");
+  };
+
+  const handleLessonFormChange = (e) => {
+    const { name, value } = e.target;
+    setLessonForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddLesson = async (e) => {
+    e.preventDefault();
+    if (!lessonForm.title.trim()) {
+      setLessonFormError("Введите название урока");
+      return;
+    }
+    
+    setLessonFormLoading(true);
+    setLessonFormError("");
+    
+    try {
+      const orderNum = courseLessons.length + 1;
+      await createLesson(editingCourse.id, lessonForm.title, lessonForm.content, orderNum);
+      
+      // Reload lessons
+      const lessons = await getLessonsByCourse(editingCourse.id);
+      setCourseLessons(lessons || []);
+      
+      setLessonForm({ title: "", content: "" });
+      setShowAddLesson(false);
+    } catch (err) {
+      console.error("Ошибка создания урока:", err);
+      setLessonFormError(err.message || "Не удалось создать урок");
+    } finally {
+      setLessonFormLoading(false);
+    }
+  };
+
+  const handleUpdateLesson = async (e) => {
+    e.preventDefault();
+    if (!lessonForm.title.trim()) {
+      setLessonFormError("Введите название урока");
+      return;
+    }
+    
+    setLessonFormLoading(true);
+    setLessonFormError("");
+    
+    try {
+      await updateLesson(
+        editingLesson.id, 
+        lessonForm.title, 
+        lessonForm.content, 
+        editingLesson.order_num,
+        editingCourse.id
+      );
+      
+      // Reload lessons
+      const lessons = await getLessonsByCourse(editingCourse.id);
+      setCourseLessons(lessons || []);
+      
+      setLessonForm({ title: "", content: "" });
+      setEditingLesson(null);
+      setShowAddLesson(false);
+    } catch (err) {
+      console.error("Ошибка обновления урока:", err);
+      setLessonFormError(err.message || "Не удалось обновить урок");
+    } finally {
+      setLessonFormLoading(false);
+    }
+  };
+
+  const handleEditLesson = (lesson) => {
+    setEditingLesson(lesson);
+    setLessonForm({ title: lesson.title, content: lesson.content || "" });
+    setShowAddLesson(true);
+    setLessonFormError("");
+  };
+
+  const handleDeleteLesson = async (lessonId) => {
+    if (!window.confirm("Вы уверены, что хотите удалить этот урок?")) {
+      return;
+    }
+    
+    try {
+      await deleteLesson(lessonId);
+      
+      // Reload lessons
+      const lessons = await getLessonsByCourse(editingCourse.id);
+      setCourseLessons(lessons || []);
+    } catch (err) {
+      console.error("Ошибка удаления урока:", err);
+      alert(err.message || "Не удалось удалить урок");
+    }
+  };
+
+  const handleCancelLessonEdit = () => {
+    setShowAddLesson(false);
+    setEditingLesson(null);
+    setLessonForm({ title: "", content: "" });
+    setLessonFormError("");
   };
 
   return (
@@ -223,21 +362,169 @@ const TeacherCoursesPage = ({ user }) => {
           ) : (
             <div className="courses-grid">
               {courses.map((course) => (
-                <CourseCard
-                  key={course.id}
-                  category={getCategoryLabel(course.course_type)}
-                  gradient={getGradientForCourse(course.id)}
-                  title={course.title}
-                  description={course.description}
-                  instructor={course.full_name}
-                  duration={`${course.duration_weeks} недель`}
-                  onEnroll={() => console.log("Enroll clicked")}
-                />
+                <div key={course.id} className="course-card">
+                  <div
+                    className="course-image"
+                    style={{ background: getGradientForCourse(course.id) }}
+                  >
+                    <span className="course-badge">{getCategoryLabel(course.course_type)}</span>
+                  </div>
+                  <div className="course-content">
+                    <h3 className="course-title">{course.title}</h3>
+                    <p className="course-description">{course.description}</p>
+                    <div className="course-meta">
+                      <div className="instructor">
+                        <div className="instructor-avatar-small">
+                          {course.full_name?.[0] || "П"}
+                        </div>
+                        <span>{course.full_name || "Преподаватель"}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="course-footer">
+                    <div className="course-info">
+                      <span className="course-duration">⏱ {course.duration_weeks} нед.</span>
+                    </div>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => handleEditCourse(course)}
+                    >
+                      ✏️ Редактировать
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           )}
         </div>
       </section>
+
+      {/* Edit Course Modal */}
+      {editModalOpen && editingCourse && (
+        <div className="modal" onClick={handleCloseModal}>
+          <div className="modal-overlay"></div>
+          <div className="modal-content edit-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📚 {editingCourse.title}</h2>
+              <button className="modal-close" onClick={handleCloseModal}>×</button>
+            </div>
+            <div className="modal-body">
+              <h3 style={{ marginBottom: "1rem" }}>Уроки курса</h3>
+              
+              {lessonsLoading ? (
+                <p>Загрузка уроков...</p>
+              ) : courseLessons.length === 0 ? (
+                <div className="no-results" style={{ padding: "1rem", marginBottom: "1rem" }}>
+                  <p>Уроки пока не добавлены</p>
+                </div>
+              ) : (
+                <div className="lessons-edit-list">
+                  {courseLessons.map((lesson, index) => (
+                    <div key={lesson.id} className="lesson-edit-item">
+                      <span className="lesson-number">{index + 1}</span>
+                      <div className="lesson-info">
+                        <div className="lesson-title">{lesson.title}</div>
+                      </div>
+                      <div className="lesson-edit-actions">
+                        <button
+                          className="btn btn-outline btn-icon"
+                          onClick={() => handleEditLesson(lesson)}
+                          title="Редактировать"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="btn btn-outline btn-icon"
+                          onClick={() => handleDeleteLesson(lesson.id)}
+                          title="Удалить"
+                          style={{ color: "#ef4444" }}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!showAddLesson ? (
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setShowAddLesson(true);
+                    setEditingLesson(null);
+                    setLessonForm({ title: "", content: "" });
+                  }}
+                  style={{ marginTop: "1rem" }}
+                >
+                  ➕ Добавить урок
+                </button>
+              ) : (
+                <div className="add-lesson-form">
+                  <h4 style={{ marginBottom: "1rem" }}>
+                    {editingLesson ? "Редактировать урок" : "Новый урок"}
+                  </h4>
+                  
+                  {lessonFormError && (
+                    <div className="alert alert-error" style={{ marginBottom: "1rem" }}>
+                      {lessonFormError}
+                    </div>
+                  )}
+                  
+                  <form onSubmit={editingLesson ? handleUpdateLesson : handleAddLesson}>
+                    <div className="form-group">
+                      <label htmlFor="lessonTitle">Название урока *</label>
+                      <input
+                        type="text"
+                        id="lessonTitle"
+                        name="title"
+                        placeholder="Например: Введение в тему"
+                        value={lessonForm.title}
+                        onChange={handleLessonFormChange}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="lessonContent">Содержание урока</label>
+                      <textarea
+                        id="lessonContent"
+                        name="content"
+                        placeholder="Текст урока..."
+                        value={lessonForm.content}
+                        onChange={handleLessonFormChange}
+                        rows="6"
+                      />
+                    </div>
+                    
+                    <div style={{ display: "flex", gap: "1rem" }}>
+                      <button
+                        type="submit"
+                        className="btn btn-primary"
+                        disabled={lessonFormLoading}
+                      >
+                        {lessonFormLoading 
+                          ? "Сохраняем..." 
+                          : editingLesson 
+                            ? "Сохранить изменения" 
+                            : "Добавить урок"
+                        }
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline"
+                        onClick={handleCancelLessonEdit}
+                      >
+                        Отмена
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

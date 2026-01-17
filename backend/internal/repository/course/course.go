@@ -107,3 +107,32 @@ func (r *repository) Update(ctx context.Context, course *domain.Course) error {
 	}
 	return nil
 }
+
+func (r *repository) Search(ctx context.Context, query string, courseType string, limit, offset int) ([]*domain.Course, error) {
+	q := r.db.WithContext(ctx).
+		Table("courses c").
+		Select("c.*, u.full_name as full_name").
+		Joins("JOIN teachers t ON c.teacher_id = t.user_id").
+		Joins("JOIN users u ON t.user_id = u.id").
+		Where("c.deleted_at IS NULL")
+
+	if query != "" {
+		searchPattern := "%" + query + "%"
+		q = q.Where("(c.title ILIKE ? OR c.description ILIKE ?)", searchPattern, searchPattern)
+	}
+
+	if courseType != "" {
+		q = q.Where("c.course_type = ?", courseType)
+	}
+
+	var courses []*domain.Course
+	if err := q.
+		Order("c.created_at DESC").
+		Limit(limit).
+		Offset(offset).
+		Find(&courses).Error; err != nil {
+		return nil, err
+	}
+
+	return courses, nil
+}
